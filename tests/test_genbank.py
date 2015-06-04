@@ -519,7 +519,7 @@ class TestProcessArgsToLogic_search(unittest.TestCase) :
         result = mod._processArgsToLogic_search(args, self.stdout, self.stderr)
         self.assertTrue(result.forceDownload)
 
-### ** Test _genbankParseDocSumXML
+### ** Test _parseDocSumXML
 
 class TestGenbankParseDocSumXML(unittest.TestCase) :
 
@@ -528,29 +528,29 @@ class TestGenbankParseDocSumXML(unittest.TestCase) :
     def setUp(self) :
         with open(os.path.join(CUR_DIR,
                                "test_genbank",
-                               "test_genbankParseDocSumXML",
+                               "test_parseDocSumXML",
                                "docSum_noResults.xml"), "r") as fo :
             self.xml_noResults = fo.read()
         with open(os.path.join(CUR_DIR,
                                "test_genbank",
-                               "test_genbankParseDocSumXML",
+                               "test_parseDocSumXML",
                                "docSum_results.xml"), "r") as fo :
             self.xml_results = fo.read()
 
 ### *** Test
 
-    def test_genbankParseDocSumXML_noResults(self) :
-        result = mod._genbankParseDocSumXML(self.xml_noResults)
+    def test_parseDocSumXML_noResults(self) :
+        result = mod._parseDocSumXML(self.xml_noResults)
         expected = []
         self.assertEqual(result, expected)
         
-    def test_genbankParseDocSumXML_results_000(self) :
-        result = mod._genbankParseDocSumXML(self.xml_results)
+    def test_parseDocSumXML_results_000(self) :
+        result = mod._parseDocSumXML(self.xml_results)
         expected = 4
         self.assertEqual(len(result), expected)
 
-    def test_genbankParseDocSumXML_results_001(self) :
-        result = mod._genbankParseDocSumXML(self.xml_results)
+    def test_parseDocSumXML_results_001(self) :
+        result = mod._parseDocSumXML(self.xml_results)
         expected = set(["Status", "Comment", "Extra", "CreateDate", "Title",
                         "TaxId", "ReplacedBy", "Caption", "Length", "Flags",
                         "UpdateDate", "Gi"])
@@ -564,11 +564,11 @@ class TestGenbankWriteDocSums(unittest.TestCase) :
 
     def setUp(self) :
         def loadXMLtoDict(filename) :
-            file_path = os.path.join(CUR_DIR, "test_genbank/test_genbankParseDocSumXML",
+            file_path = os.path.join(CUR_DIR, "test_genbank/test_parseDocSumXML",
                                      filename)
             with open(file_path, "r") as fi :
                 file_content = fi.read()
-            return mod._genbankParseDocSumXML(file_content)
+            return mod._parseDocSumXML(file_content)
         self.docsumsNoResults = loadXMLtoDict("docSum_noResults.xml")
         self.docsumsResults = loadXMLtoDict("docSum_results.xml")
         self.handle = StringIO.StringIO()
@@ -593,7 +593,7 @@ class TestGenbankWriteDocSums(unittest.TestCase) :
         result = mod.writeDocSums(self.docsumsResults, self.handle)
         output = self.handle.getvalue()
         with open(os.path.join(CUR_DIR, "test_genbank",
-                               "test_genbankParseDocSumXML",
+                               "test_parseDocSumXML",
                                "docSum_results.table"), "r") as fi :
                   expected = fi.read()
         self.assertEqual(output, expected)
