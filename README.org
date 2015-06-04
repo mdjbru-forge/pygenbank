@@ -1,0 +1,5 @@
+Python tool to provide a *simple interface to NCBI's GenBank database*.
+
+PyGenBank is built on top of Biopython and can be used to perform a search on
+GenBank and download records.
+
