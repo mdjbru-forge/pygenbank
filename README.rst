@@ -8,6 +8,27 @@ Python tool to provide a simple interface to NCBI's GenBank database.
 PyGenBank is built on top of Biopython and can be used to perform a search on
 GenBank and download records.
 
+Installation
+============
+
+**To install the module and the command line tools**, type::
+
+  sudo pip install git+https://github.com/matthieu-bruneaux/pygenbank
+
+You can test if the installation worked with::
+
+  pygenbank-search -h
+  pygenbank-extract-CDS -h
+
+and from Python::
+
+  import genbank as gb
+  dir(gb)
+  
+**To remove the module and the command line tools**, type::
+
+  sudo pip uninstall pyGenBank 
+   
 Documentation
 =============
 
