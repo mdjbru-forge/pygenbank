@@ -275,9 +275,9 @@ class TestCheckEmailOption(unittest.TestCase) :
         self.assertIsNone(mod.Entrez.email)
 
 
-### ** Test genbankSearch
+### ** Test search
 
-class TestGenbankSearch(unittest.TestCase) :
+class TestSearch(unittest.TestCase) :
 
 # Note: This test is a bit artificial - there is not much we can test without
 # actually connecting to the GenBank server. Here we will just check that the
@@ -305,20 +305,20 @@ class TestGenbankSearch(unittest.TestCase) :
         
 ### *** Test
 
-    def test_genbankSearch_db(self) :
-        result = mod.genbankSearch("toto", 20)
+    def test_search_db(self) :
+        result = mod.search("toto", 20)
         self.assertEqual(result.split("\t")[0], "nuccore")
        
-    def test_genbankSearch_term(self) :
-        result = mod.genbankSearch("toto", 20)
+    def test_search_term(self) :
+        result = mod.search("toto", 20)
         self.assertEqual(result.split("\t")[1], "toto")
 
-    def test_genbankSearch_retmax(self) :
-        result = mod.genbankSearch("toto", 20)
+    def test_search_retmax(self) :
+        result = mod.search("toto", 20)
         self.assertEqual(result.split("\t")[2], "20")
 
-    def test_genbankSearch_usehistory(self) :
-        result = mod.genbankSearch("toto", 20)
+    def test_search_usehistory(self) :
+        result = mod.search("toto", 20)
         self.assertEqual(result.split("\t")[3], "y")
 
 ### ** Test _genbankGetRecordBatch

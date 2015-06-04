@@ -76,9 +76,9 @@ GET_ATTR_FUNCS = {
 
 ### ** Related to main_search
 
-### *** genbankSearch(term, retmax)
+### *** search(term, retmax)
 
-def genbankSearch(term, retmax) :
+def search(term, retmax) :
     """Search GenBank for a given query string. Perform a Bio.Entrez.esearch on
     db="nuccore", using history.
 
@@ -112,7 +112,7 @@ def genbankGetDocSum(searchResult, retmax = None) :
     Args:
         searchResult (Bio.Entrez.Parser.DictionaryElement): Object containing
           the result of an Entrez.esearch, typically the output from
-          :func: `genbankSearch` (or at minimum a dictionary with WebEnv 
+          :func: `search` (or at minimum a dictionary with WebEnv 
           and QueryKey entries)
         retmax (int): Maximum number of document summaries to get. If no number
           is given, uses the `RetMax` element from `searchResult`.
@@ -162,7 +162,7 @@ def _genbankGetDocSumXML(searchResult, retmax = None) :
     Args:
         searchResult (Bio.Entrez.Parser.DictionaryElement): Object containing
           the result of an Entrez.esearch, typically the output from
-          :func: `genbankSearch` (or at minimum a dictionary with WebEnv 
+          :func:`search` (or at minimum a dictionary with WebEnv 
           and QueryKey entries)
         retmax (int): Maximum number of document summaries to get. If no number
           is given, uses the `RetMax` element from `searchResult`.
@@ -189,7 +189,7 @@ def _genbankGetFullRecord(searchResult, retmax = 1) :
     Args:
         searchResult (Bio.Entrez.Parser.DictionaryElement): Object containing
           the result of an Entrez.esearch, typically the output from
-          :func:`genbankSearch` (or at minimum a dictionary with WebEnv 
+          :func:`search` (or at minimum a dictionary with WebEnv 
           and QueryKey entries).
         retmax (int): Maximum number of full records to get. Default is 1,
           which is a safe approach since individual records can sometimes 
@@ -700,7 +700,7 @@ def _main_search(args = None, stdout = sys.stdout, stderr = sys.stderr) :
     listId = None
     # Genbank search
     if args.actionFlags.get("DoGenbankSearch", False) :
-        mySearch = genbankSearch(term = args.query, retmax = args.retmax)
+        mySearch = search(term = args.query, retmax = args.retmax)
         myDocSums = genbankGetDocSum(mySearch)
         genbankWriteDocSums(myDocSums, stdout)
         listId = [x["Gi"] for x in myDocSums]
