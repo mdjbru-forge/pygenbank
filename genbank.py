@@ -267,9 +267,9 @@ def writeDocSums(docsums, handle) :
     for i in docsums :
         handle.write("\t".join([i[h] for h in headers]) + "\n")
 
-### *** genbankDownloadRecords(idList, destDir, batchSize, delay)
+### *** downloadRecords(idList, destDir, batchSize, delay)
 
-def genbankDownloadRecords(idList, destDir, batchSize, delay = 30,
+def downloadRecords(idList, destDir, batchSize, delay = 30,
                            forceDownload = False,
                            downloadFullWGS = False) :
     """Download the GenBank records for a list of IDs and save them in a
@@ -280,7 +280,7 @@ def genbankDownloadRecords(idList, destDir, batchSize, delay = 30,
     Note that a record is not downloaded if a file with the expected name
     already exists, except if `forceDownload` is `True`.
 
-    The downloading itself is performed by :func:`_genbankDownloadBatch` and
+    The downloading itself is performed by :func:`_downloadBatch` and
     :func:`_genbankGetRecordBatch`.
     
     some GenBank records do not contain actual sequence data but some reference
@@ -317,18 +317,18 @@ def genbankDownloadRecords(idList, destDir, batchSize, delay = 30,
     for i in range(0, len(newIdList), batchSize) :
         end = min(len(newIdList), i + batchSize)
         batch = newIdList[i: end]
-        _genbankDownloadBatch(batch, destDir, downloadFullWGS)
+        _downloadBatch(batch, destDir, downloadFullWGS)
         time.sleep(delay)
 
-### *** _genbankDownloadBatch(idBatch, destDir, downloadFullWGS = False)
+### *** _downloadBatch(idBatch, destDir, downloadFullWGS = False)
 
-def _genbankDownloadBatch(idBatch, destDir, downloadFullWGS = False) :
+def _downloadBatch(idBatch, destDir, downloadFullWGS = False) :
     """Download a batch of GenBank records to a destination directory. You should
     not call this function directly, but rather use
-    :func:`genbankDownloadRecords` (which itself calls
-    :func:`_genbankDownloadBatch`) for your downloads.
+    :func:`downloadRecords` (which itself calls
+    :func:`_downloadBatch`) for your downloads.
 
-    :func:`_genbankDownloadBatch` calls :func:`_genbankGetRecordBatch` to
+    :func:`_downloadBatch` calls :func:`_genbankGetRecordBatch` to
     download data from GenBank, and then takes care of separating individual
     records and writing them to files.
 
@@ -358,7 +358,7 @@ def _genbankDownloadBatch(idBatch, destDir, downloadFullWGS = False) :
             fo.write("\n//\n")
         WGSline = _genbankRecordIsWGS(r[i])
         if WGSline and downloadFullWGS :
-            genbankDownloadWGS(r[i], destDir)
+            downloadWGS(r[i], destDir)
 
 ### *** _genbankRecordIsWGS(recordStr)
 
@@ -404,9 +404,9 @@ def _genbankMakeWGSurl(WGSline) :
     url = "http://www.ncbi.nlm.nih.gov/Traces/wgs/?download=" + accRoot + ".1.gbff.gz"
     return url
 
-### *** _genbankDownloadWGS(WGSurl)
+### *** _downloadWGS(WGSurl)
 
-def _genbankDownloadWGS(WGSurl) :
+def _downloadWGS(WGSurl) :
     """Download a WGS GenBank file. The output is an uncompressed version of the
     file.
 
@@ -429,9 +429,9 @@ def _genbankDownloadWGS(WGSurl) :
     o.close()
     return output
 
-### *** genbankDownloadWGS(gbRecord, destDir)
+### *** downloadWGS(gbRecord, destDir)
 
-def genbankDownloadWGS(gbRecord, destDir) :
+def downloadWGS(gbRecord, destDir) :
     """Download and save the WGS GenBank file corresponding to a GenBank
     record with a WGS reference
 
@@ -448,7 +448,7 @@ def genbankDownloadWGS(gbRecord, destDir) :
     WGS = _genbankRecordIsWGS(gbRecord)
     assert WGS
     url = _genbankMakeWGSurl(WGS)
-    WGS_content = _genbankDownloadWGS(url)
+    WGS_content = _downloadWGS(url)
     gb = SeqIO.read(StringIO.StringIO(gbRecord + "\n//"), "genbank")
     gi = gb.annotations["gi"]
     filePath = os.path.join(destDir, gi + "_WGS.gb")
@@ -463,7 +463,7 @@ def _genbankGetRecordBatch(idList) :
     """Retrieve the GenBank records for a list of GenBank id (GIs). This is a
     relatively low-level function that only gets data from GenBank but does not
     manage batches or write files. You should use the higher level wrapper
-    :func:`genbankDownloadRecords` for your own downloads.
+    :func:`downloadRecords` for your own downloads.
 
     Args:
         idBatch (list of str): List of GenBank id
@@ -712,7 +712,7 @@ def _main_search(args = None, stdout = sys.stdout, stderr = sys.stderr) :
     # Download records
     if args.download :
         assert listId is not None
-        genbankDownloadRecords(idList = listId, destDir = args.outputDir,
+        downloadRecords(idList = listId, destDir = args.outputDir,
                                batchSize = args.batchSize, delay = args.delay,
                                forceDownload = args.forceDownload,
                                downloadFullWGS = args.fullWGS)
