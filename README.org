@@ -1,4 +1,4 @@
-https://travis-ci.org/matthieu-bruneaux/pygenbank.svg?branch=master https://coveralls.io/repos/matthieu-bruneaux/pygenbank/badge.svg?branch=master]]
+[[https://travis-ci.org/matthieu-bruneaux/pygenbank?branch%3Dmaster][https://travis-ci.org/matthieu-bruneaux/pygenbank.svg?branch=master]] [[https://coveralls.io/r/matthieu-bruneaux/pygenbank?branch%3Dmaster][https://coveralls.io/repos/matthieu-bruneaux/pygenbank/badge.svg?branch=master]]
 
 Python tool to provide a *simple interface to NCBI's GenBank database*.
 
