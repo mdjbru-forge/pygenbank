@@ -30,14 +30,14 @@ Search GenBank and retrieve record id
 Performing a GenBank search is as simple as::
 
    # Perform a GenBank search
-   mySearch = genbank.genbankSearch(term = "hemocyanin", retmax = 100)
+   mySearch = genbank.search(term = "hemocyanin", retmax = 100)
 
 The search results can be used to get summaries of the results and apply some
 simple filtering on the record id before proceeding to the actual record
 downloading::
    
    # Get the summaries from the results
-   summaries = genbank.genbankGetDocSum(mySearch)
+   summaries = genbank.getDocSum(mySearch)
 
    # Extract the id of interest ("Gi" field)
    myId = [x["Gi"] for x in summaries if int(x["Length"]) < 10000]
@@ -49,7 +49,7 @@ Download the GenBank records
 ::
 
    # Download the GenBank records
-   genbank.genbankDownloadRecords(idList = myId, destDir = ".", batchSize = 20)
+   genbank.downloadRecords(idList = myId, destDir = ".", batchSize = 20)
 
 Functions
 ---------
@@ -58,54 +58,63 @@ Functions
 
   digraph G {
   rankdir=LR;
-  subgraph cluster1{
+  subgraph cluster_1 {
   node[shape=box,style=filled,fillcolor="#dfaf8f"];
   _processOutfmtArg;
   _fileLinesToList;
+  _makeSummaryForCDS;
   _checkEmailOption;
-  _processArgsToLogic_search;
-  _genbankParseDocSumXML;
+  _getRecordBatch;
+  _recordIsWGS;
+  _downloadBatch;
   _processArgsToLogic_extract_CDS;
-  _genbankSummarizeRecord;
-  _genbankDownloadBatch;
-  _genbankGetDocSumXML;
+  _parseDocSumXML;
+  _getProteinHashFromCDS;
+  _getDocSumXML;
   _makeParser_search;
-  _genbankMakeSummaryForCDS;
   _checkRetmax;
-  _genbankGetRecordBatch;
+  _summarizeRecord;
+  _downloadWGS;
+  _makeWGSurl;
   _makeParser_extract_CDS;
-  _genbankGetProteinHashFromCDS;
+  _processArgsToLogic_search;
   node[shape=box,style=filled,fillcolor="#7cb8bb"];
-  genbankDownloadRecords;
-  genbankGetDocSumFromId;
-  genbankWriteDocSums;
-  genbankSearch;
-  genbankGetDocSum;
+  getDocSumFromId;
+  downloadRecords;
+  getDocSum;
+  search;
+  downloadWGS;
+  writeDocSums;
   node[shape=box,style=filled,fillcolor="#9fc59f"];
   _main_search;
   _main_extract_CDS;
-  genbankDownloadRecords -> _genbankDownloadBatch;
-  genbankGetDocSumFromId -> _genbankParseDocSumXML;
-  genbankGetDocSumFromId -> _genbankGetDocSumXML;
+  getDocSum -> _getDocSumXML;
+  getDocSum -> _parseDocSumXML;
+  getDocSumFromId -> _getDocSumXML;
+  getDocSumFromId -> _parseDocSumXML;
+  downloadRecords -> _downloadBatch;
+  _processArgsToLogic_extract_CDS -> _processOutfmtArg;
+  downloadWGS -> _downloadWGS;
+  downloadWGS -> _makeWGSurl;
+  downloadWGS -> _recordIsWGS;
+  _downloadBatch -> downloadWGS;
+  _downloadBatch -> _getRecordBatch;
+  _downloadBatch -> _recordIsWGS;
+  _main_search -> search;
+  _main_search -> getDocSum;
+  _main_search -> _makeParser_search;
+  _main_search -> downloadRecords;
+  _main_search -> getDocSumFromId;
+  _main_search -> _fileLinesToList;
+  _main_search -> _processArgsToLogic_search;
+  _main_search -> writeDocSums;
   _processArgsToLogic_search -> _checkRetmax;
   _processArgsToLogic_search -> _checkEmailOption;
-  _genbankSummarizeRecord -> _genbankGetProteinHashFromCDS;
-  _genbankSummarizeRecord -> _genbankMakeSummaryForCDS;
-  _genbankDownloadBatch -> _genbankGetRecordBatch;
-  _processArgsToLogic_extract_CDS -> _processOutfmtArg;
-  _main_search -> _makeParser_search;
-  _main_search -> genbankGetDocSumFromId;
-  _main_search -> genbankSearch;
-  _main_search -> _fileLinesToList;
-  _main_search -> genbankGetDocSum;
-  _main_search -> genbankDownloadRecords;
-  _main_search -> genbankWriteDocSums;
-  _main_search -> _processArgsToLogic_search;
-  genbankGetDocSum -> _genbankParseDocSumXML;
-  genbankGetDocSum -> _genbankGetDocSumXML;
   _main_extract_CDS -> _processArgsToLogic_extract_CDS;
   _main_extract_CDS -> _makeParser_extract_CDS;
-  _main_extract_CDS -> _genbankSummarizeRecord;
+  _main_extract_CDS -> _summarizeRecord;
+  _summarizeRecord -> _getProteinHashFromCDS;
+  _summarizeRecord -> _makeSummaryForCDS;
   }
   }
 
