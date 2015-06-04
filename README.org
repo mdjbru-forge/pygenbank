@@ -1,3 +1,5 @@
+https://travis-ci.org/matthieu-bruneaux/pygenbank.svg?branch=master https://coveralls.io/repos/matthieu-bruneaux/pygenbank/badge.svg?branch=master]]
+
 Python tool to provide a *simple interface to NCBI's GenBank database*.
 
 PyGenBank is built on top of Biopython and can be used to perform a search on
