@@ -95,7 +95,7 @@ def search(term, retmax) :
             "TranslationSet", "RetStart", "QueryKey", "WebEnv"
         
         This object can be used with other function of this module to get the 
-        actual data (:func:`getDocSum` and :func:`_genbankGetFullRecord`)
+        actual data (:func:`getDocSum` and :func:`_getFullRecord`)
 
     """
     handle = Entrez.esearch(db = "nuccore", term = term, retmax =retmax,
@@ -126,7 +126,7 @@ def getDocSum(searchResult, retmax = None) :
         retmax = searchResult["RetMax"]
     docSumsXML = _getDocSumXML(searchResult = searchResult,
                                      retmax = retmax)
-    docSums = _genbankParseDocSumXML(xmlContent = docSumsXML)
+    docSums = _parseDocSumXML(xmlContent = docSumsXML)
     return docSums
 
 ### *** getDocSumFromId(listId, retmax = None)
@@ -150,7 +150,7 @@ def getDocSumFromId(listId, retmax = None) :
     mySearch = Entrez.read(Entrez.epost(db = "nuccore", id = ",".join(listId)))
     docSumsXML = _getDocSumXML(searchResult = mySearch,
                                       retmax = retmax)
-    docSums = _genbankParseDocSumXML(xmlContent = docSumsXML)
+    docSums = _parseDocSumXML(xmlContent = docSumsXML)
     return docSums    
 
 ### *** _getDocSumXML(searchResult, retmax = None)
@@ -181,9 +181,9 @@ def _getDocSumXML(searchResult, retmax = None) :
     handle.close()
     return data
 
-### *** _genbankGetFullRecord(searchResult, retmax)
+### *** _getFullRecord(searchResult, retmax)
 
-def _genbankGetFullRecord(searchResult, retmax = 1) :
+def _getFullRecord(searchResult, retmax = 1) :
     """Fetch the full GenBank records for the entries from an Entrez.esearch.
 
     Args:
@@ -207,9 +207,9 @@ def _genbankGetFullRecord(searchResult, retmax = 1) :
     handle.close()
     return data
 
-### *** _genbankParseDocSumXML(xmlContent)
+### *** _parseDocSumXML(xmlContent)
 
-def _genbankParseDocSumXML(xmlContent) :
+def _parseDocSumXML(xmlContent) :
     """Parse the documents summaries from xml format into a list of
     dictionaries.
 
@@ -251,7 +251,7 @@ def writeDocSums(docsums, handle) :
     Args:
         docsums (list of dictionaries or None): A list of dictionaries 
           containing the document summaries, typically the output from 
-          :func:`genbankParseDocSumXM`. If it is an empty list, the 
+          :func:`parseDocSumXML`. If it is an empty list, the 
           function will not write anything.
         handle (similar to file handle): Handle object with a `write` method
           (e.g. open file, sys.stdout, StringIO object)
