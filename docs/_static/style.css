@@ -1,0 +1,10 @@
+dt {
+    background: #eeeeee;
+    padding: 5px;
+}
+
+.wy-nav-content a,
+.wy-nav-content a:hover,
+.wy-nav-content a:visited {
+    color: #3091d1;
+}
