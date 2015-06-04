@@ -11,7 +11,7 @@ GenBank and download records.
 Documentation
 =============
 
-Documentation for the project is available on [[http://pygenbank.readthedocs.org/en/latest/][Read the Docs]].
+Documentation for the project is available on `Read the Docs <http://pygenbank.readthedocs.org/en/latest/>`_.
 
 .. |docs| image:: https://readthedocs.org/projects/pygenbank/badge/?version=latest
    :target: http://pygenbank.readthedocs.org/en/latest/
