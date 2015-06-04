@@ -321,7 +321,7 @@ class TestSearch(unittest.TestCase) :
         result = mod.search("toto", 20)
         self.assertEqual(result.split("\t")[3], "y")
 
-### ** Test _genbankGetRecordBatch
+### ** Test _getRecordBatch
 
 class TestGenbankGetRecordBatch(unittest.TestCase) :
 
@@ -342,33 +342,33 @@ class TestGenbankGetRecordBatch(unittest.TestCase) :
 
 ### *** Test
 
-    def test_genbankGetRecordBatch_db(self) :
+    def test_getRecordBatch_db(self) :
         inputList = ["tata", "tete", "titi", "toto"]
-        result = mod._genbankGetRecordBatch(inputList)
+        result = mod._getRecordBatch(inputList)
         expected = "nuccore"
         self.assertEqual(result.split("\t")[0], expected)
                                            
-    def test_genbankGetRecordBatch_rettype(self) :
+    def test_getRecordBatch_rettype(self) :
         inputList = ["tata", "tete", "titi", "toto"]
-        result = mod._genbankGetRecordBatch(inputList)
+        result = mod._getRecordBatch(inputList)
         expected = "gbwithparts"
         self.assertEqual(result.split("\t")[1], expected)
 
-    def test_genbankGetRecordBatch_retmode(self) :
+    def test_getRecordBatch_retmode(self) :
         inputList = ["tata", "tete", "titi", "toto"]
-        result = mod._genbankGetRecordBatch(inputList)
+        result = mod._getRecordBatch(inputList)
         expected = "text"
         self.assertEqual(result.split("\t")[2], expected)
 
-    def test_genbankGetRecordBatch_id(self) :
+    def test_getRecordBatch_id(self) :
         inputList = ["tata", "tete", "titi", "toto"]
-        result = mod._genbankGetRecordBatch(inputList)
+        result = mod._getRecordBatch(inputList)
         expected = "tata,tete,titi,toto"
         self.assertEqual(result.split("\t")[3], expected)
 
-    def test_genbankGetRecordBatch_empty_list(self) :
+    def test_getRecordBatch_empty_list(self) :
         inputList = []
-        result = mod._genbankGetRecordBatch(inputList)
+        result = mod._getRecordBatch(inputList)
         expected = ""
         self.assertEqual(result.split("\t")[3], expected)
                    

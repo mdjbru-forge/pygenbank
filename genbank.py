@@ -281,7 +281,7 @@ def downloadRecords(idList, destDir, batchSize, delay = 30,
     already exists, except if `forceDownload` is `True`.
 
     The downloading itself is performed by :func:`_downloadBatch` and
-    :func:`_genbankGetRecordBatch`.
+    :func:`_getRecordBatch`.
     
     some GenBank records do not contain actual sequence data but some reference
     to a WGS (whole genome shotgun sequencing) project. For those, setting
@@ -328,7 +328,7 @@ def _downloadBatch(idBatch, destDir, downloadFullWGS = False) :
     :func:`downloadRecords` (which itself calls
     :func:`_downloadBatch`) for your downloads.
 
-    :func:`_downloadBatch` calls :func:`_genbankGetRecordBatch` to
+    :func:`_downloadBatch` calls :func:`_getRecordBatch` to
     download data from GenBank, and then takes care of separating individual
     records and writing them to files.
 
@@ -344,7 +344,7 @@ def _downloadBatch(idBatch, destDir, downloadFullWGS = False) :
 
     """
     # Download the records
-    r = _genbankGetRecordBatch(idBatch)
+    r = _getRecordBatch(idBatch)
     # Split the downloaded strings into records
     r = r.strip().split("\n//")
     print(r)
@@ -356,13 +356,13 @@ def _downloadBatch(idBatch, destDir, downloadFullWGS = False) :
         with open(os.path.join(destDir, idBatch[i] + ".gb"), "w") as fo :
             fo.write(r[i].strip())
             fo.write("\n//\n")
-        WGSline = _genbankRecordIsWGS(r[i])
+        WGSline = _recordIsWGS(r[i])
         if WGSline and downloadFullWGS :
             downloadWGS(r[i], destDir)
 
-### *** _genbankRecordIsWGS(recordStr)
+### *** _recordIsWGS(recordStr)
 
-def _genbankRecordIsWGS(recordStr) :
+def _recordIsWGS(recordStr) :
     """Check if a GenBank record is from a whole genome shotgun project. This
     is done by searching for the "WGS " string at the beginning of a line
 
@@ -382,9 +382,9 @@ def _genbankRecordIsWGS(recordStr) :
     else :
         raise Exception("Several lines starting with \"WGS \" in a GenBank record")        
 
-### *** _genbankMakeWGSurl(WGSline)
+### *** _makeWGSurl(WGSline)
 
-def _genbankMakeWGSurl(WGSline) :
+def _makeWGSurl(WGSline) :
     """Prepare the url to download the GenBank records corresponding to one
     WGS line. The WGS line is the output from 
     :func:`_genbankRecirdIsWGS`.
@@ -412,7 +412,7 @@ def _downloadWGS(WGSurl) :
 
     Args:
         WGSurl (str): Url to download the gzip file, output from 
-          :func:`_genbankMakeWGSurl`
+          :func:`_makeWGSurl`
 
     Returns:
         str: Uncompressed GenBank file content
@@ -445,9 +445,9 @@ def downloadWGS(gbRecord, destDir) :
           plus "WGS"
 
     """
-    WGS = _genbankRecordIsWGS(gbRecord)
+    WGS = _recordIsWGS(gbRecord)
     assert WGS
-    url = _genbankMakeWGSurl(WGS)
+    url = _makeWGSurl(WGS)
     WGS_content = _downloadWGS(url)
     gb = SeqIO.read(StringIO.StringIO(gbRecord + "\n//"), "genbank")
     gi = gb.annotations["gi"]
@@ -456,9 +456,9 @@ def downloadWGS(gbRecord, destDir) :
         fo.write(WGS_content)
     return
 
-### *** _genbankGetRecordBatch(idList)
+### *** _getRecordBatch(idList)
 
-def _genbankGetRecordBatch(idList) :
+def _getRecordBatch(idList) :
 
     """Retrieve the GenBank records for a list of GenBank id (GIs). This is a
     relatively low-level function that only gets data from GenBank but does not
@@ -500,9 +500,9 @@ def _fileLinesToList(filename) :
 
 ### ** Related to main_extract_CDS
 
-### *** _genbankSummarizeRecord(record, summaryFormat, hashConstructor, existingHashes)
+### *** _summarizeRecord(record, summaryFormat, hashConstructor, existingHashes)
 
-def _genbankSummarizeRecord(record, summaryFormat, hashConstructor,
+def _summarizeRecord(record, summaryFormat, hashConstructor,
                             existingHashes = dict()):
     """Produce a tabular summary of all the CDS features present in a GenBank
     record and a dictionary containing hashes of the unique sequences (hash,
@@ -528,13 +528,13 @@ def _genbankSummarizeRecord(record, summaryFormat, hashConstructor,
           * dictionary (hash, protein sequences): dictionary given in input as
             `existingHashes` and updated with the hashes from `record`. This is
             the dictionary one can pass to another call to
-            :func:`_genbankSummarizeRecord` in order to progressively build a
+            :func:`_summarizeRecord` in order to progressively build a
             complete dictionary of all hashes for several GenBank records.
 
           * dictionary (hash, protein sequences): dictionary containing only
             the new hashes not already present in `existingHashes`. This is
             useful if one wants to update an output stream with the unique
-            hashes after each call to :func:`_genbankSummarizeRecord` when
+            hashes after each call to :func:`_summarizeRecord` when
             processing several records.
 
     """
@@ -544,8 +544,8 @@ def _genbankSummarizeRecord(record, summaryFormat, hashConstructor,
     currentHashes = existingHashes.copy()
     currentHashes_keys = set(currentHashes.keys())
     for CDS in list_CDS :
-        (protSeq, h) = _genbankGetProteinHashFromCDS(CDS, hashConstructor)
-        summary += (_genbankMakeSummaryForCDS(record, CDS, h, summaryFormat) +
+        (protSeq, h) = _getProteinHashFromCDS(CDS, hashConstructor)
+        summary += (_makeSummaryForCDS(record, CDS, h, summaryFormat) +
                     "\n")
         if h in currentHashes_keys :
             assert protSeq == currentHashes[h]
@@ -555,9 +555,9 @@ def _genbankSummarizeRecord(record, summaryFormat, hashConstructor,
             currentHashes_keys.add(h)
     return (summary, currentHashes, newHashes)
 
-### *** _genbankGetProteinHashFromCDS(CDS, hashConstructor)
+### *** _getProteinHashFromCDS(CDS, hashConstructor)
 
-def _genbankGetProteinHashFromCDS(CDS, hashConstructor) :
+def _getProteinHashFromCDS(CDS, hashConstructor) :
     """Extract the protein sequence from a Bio.SeqFeature.SeqFeature CDS object and
     determine its hash value.
 
@@ -579,9 +579,9 @@ def _genbankGetProteinHashFromCDS(CDS, hashConstructor) :
     hStr = h.hexdigest()
     return (protSeq, hStr)
 
-### *** _genbankMakeSummaryForCDS(record, CDS, hStr, summaryFormat)
+### *** _makeSummaryForCDS(record, CDS, hStr, summaryFormat)
 
-def _genbankMakeSummaryForCDS(record, CDS, hStr, summaryFormat, getAttrFuncs = None) :
+def _makeSummaryForCDS(record, CDS, hStr, summaryFormat, getAttrFuncs = None) :
 
     """Make a summary for one CDS feature object.
 
@@ -606,9 +606,9 @@ def _genbankMakeSummaryForCDS(record, CDS, hStr, summaryFormat, getAttrFuncs = N
 
 ### ** Not related to a main function
 
-### *** _genbankRecordInfo(record, outfmt, fmtdict)
+### *** _recordInfo(record, outfmt, fmtdict)
 
-def _genbankRecordInfo(record, outfmt, fmtdict = _GB_RECORD_FMTDICT) :
+def _recordInfo(record, outfmt, fmtdict = _GB_RECORD_FMTDICT) :
     """Get some information about a GenBank record (stored as a
     Bio.SeqRecord.SeqRecord object).
 
@@ -625,9 +625,9 @@ def _genbankRecordInfo(record, outfmt, fmtdict = _GB_RECORD_FMTDICT) :
     """
     return [fmtdict[x](record) for x in outfmt]
 
-### *** _genbankCDSinfo(CDS, outfmt, fmtdict)
+### *** _CDSinfo(CDS, outfmt, fmtdict)
 
-def _genbankCDSinfo(CDS, outfmt, fmtdictCDS = _GB_CDS_FMTDICT,
+def _CDSinfo(CDS, outfmt, fmtdictCDS = _GB_CDS_FMTDICT,
                     fmtdictRecord = _GB_RECORD_FMTDICT,
                     parentRecord = None, hashConstructor = None) :
     """Get some information about a GenBank CDS (stored as a
@@ -910,7 +910,7 @@ def _main_extract_CDS(args = None, stdout = sys.stdout, stderr = sys.stderr,
         for r in record :
             if not args.actionFlags.get("DoCount", False) :
                 (summaryString, uniqueSeq, newSeq) = (
-                    _genbankSummarizeRecord(r, args.outfmt, args.hash, uniqueSeq))
+                    _summarizeRecord(r, args.outfmt, args.hash, uniqueSeq))
                 stdout.write(summaryString)
             else :
                 count = len([x for x in r.features if x.type == "CDS"])
@@ -1035,7 +1035,7 @@ def _processOutfmtArg(outfmt, stderr, gb_record_fmtdict, gb_cds_fmtdict) :
 
     Returns:
         list: List of outfmt specifiers ready to pass to 
-          :func:`_genbankCDSinfo`
+          :func:`_CDSinfo`
 
     """
     outfmt_keys = outfmt.split(",")
