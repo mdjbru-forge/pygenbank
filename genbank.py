@@ -95,7 +95,7 @@ def search(term, retmax) :
             "TranslationSet", "RetStart", "QueryKey", "WebEnv"
         
         This object can be used with other function of this module to get the 
-        actual data (:func:`genbankGetDocSum` and :func:`_genbankGetFullRecord`)
+        actual data (:func:`getDocSum` and :func:`_genbankGetFullRecord`)
 
     """
     handle = Entrez.esearch(db = "nuccore", term = term, retmax =retmax,
@@ -104,9 +104,9 @@ def search(term, retmax) :
     handle.close()
     return results
 
-### *** genbankGetDocSum(searchResult, retmax = None)
+### *** getDocSum(searchResult, retmax = None)
 
-def genbankGetDocSum(searchResult, retmax = None) :
+def getDocSum(searchResult, retmax = None) :
     """Fetch the documents summaries for the entries from an Entrez.esearch.
 
     Args:
@@ -124,14 +124,14 @@ def genbankGetDocSum(searchResult, retmax = None) :
     """
     if retmax is None:
         retmax = searchResult["RetMax"]
-    docSumsXML = _genbankGetDocSumXML(searchResult = searchResult,
+    docSumsXML = _getDocSumXML(searchResult = searchResult,
                                      retmax = retmax)
     docSums = _genbankParseDocSumXML(xmlContent = docSumsXML)
     return docSums
 
-### *** genbankGetDocSumFromId(listId, retmax = None)
+### *** getDocSumFromId(listId, retmax = None)
 
-def genbankGetDocSumFromId(listId, retmax = None) :
+def getDocSumFromId(listId, retmax = None) :
     """Fetch the documents summaries from a list of GenBank identifiers.
 
     Args:
@@ -148,14 +148,14 @@ def genbankGetDocSumFromId(listId, retmax = None) :
         retmax = len(listId)
     # Epost modified fromt the Biopython cookbook
     mySearch = Entrez.read(Entrez.epost(db = "nuccore", id = ",".join(listId)))
-    docSumsXML = _genbankGetDocSumXML(searchResult = mySearch,
+    docSumsXML = _getDocSumXML(searchResult = mySearch,
                                       retmax = retmax)
     docSums = _genbankParseDocSumXML(xmlContent = docSumsXML)
     return docSums    
 
-### *** _genbankGetDocSumXML(searchResult, retmax = None)
+### *** _getDocSumXML(searchResult, retmax = None)
 
-def _genbankGetDocSumXML(searchResult, retmax = None) :
+def _getDocSumXML(searchResult, retmax = None) :
     """Fetch the documents summaries in XML format for the entries from an
     Entrez.esearch.
 
@@ -216,7 +216,7 @@ def _genbankParseDocSumXML(xmlContent) :
     Args:
         xmlContent (string): Document summaries in XML format (note: this is a
           string, not a file name). This is typically the output from 
-          :func:`_genbankGetDocSumXML`.
+          :func:`_getDocSumXML`.
 
     Returns:
         list of dictionaries: A list of dictionaries containing the 
@@ -242,9 +242,9 @@ def _genbankParseDocSumXML(xmlContent) :
         docsums.append(entry)
     return docsums
 
-### *** genbankWriteDocSums(docsums, handle)
+### *** writeDocSums(docsums, handle)
 
-def genbankWriteDocSums(docsums, handle) :
+def writeDocSums(docsums, handle) :
     """Write the documents summaries into a tabular format to any handle with
     a `write` method.
 
@@ -701,14 +701,14 @@ def _main_search(args = None, stdout = sys.stdout, stderr = sys.stderr) :
     # Genbank search
     if args.actionFlags.get("DoGenbankSearch", False) :
         mySearch = search(term = args.query, retmax = args.retmax)
-        myDocSums = genbankGetDocSum(mySearch)
-        genbankWriteDocSums(myDocSums, stdout)
+        myDocSums = getDocSum(mySearch)
+        writeDocSums(myDocSums, stdout)
         listId = [x["Gi"] for x in myDocSums]
     # Get docsums for a list of identifiers
     if args.actionFlags.get("DoGetList", False) :
         listId = _fileLinesToList(args.listId)
-        myDocSums = genbankGetDocSumFromId(listId)
-        genbankWriteDocSums(myDocSums, stdout)
+        myDocSums = getDocSumFromId(listId)
+        writeDocSums(myDocSums, stdout)
     # Download records
     if args.download :
         assert listId is not None

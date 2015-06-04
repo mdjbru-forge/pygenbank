@@ -556,7 +556,7 @@ class TestGenbankParseDocSumXML(unittest.TestCase) :
                         "UpdateDate", "Gi"])
         self.assertEqual(set(result[0].keys()), expected)
 
-### ** Test genbankWriteDocSums
+### ** Test writeDocSums
 
 class TestGenbankWriteDocSums(unittest.TestCase) :
 
@@ -575,22 +575,22 @@ class TestGenbankWriteDocSums(unittest.TestCase) :
         
 ### *** Test
 
-    def test_genbankWriteDocSums_noResults_000(self) :
-        result = mod.genbankWriteDocSums(self.docsumsNoResults, self.handle)
+    def test_writeDocSums_noResults_000(self) :
+        result = mod.writeDocSums(self.docsumsNoResults, self.handle)
         self.assertIsNone(result)
 
-    def test_genbankWriteDocSums_noResults_000b(self) :
-        result = mod.genbankWriteDocSums(self.docsumsNoResults, self.handle)
+    def test_writeDocSums_noResults_000b(self) :
+        result = mod.writeDocSums(self.docsumsNoResults, self.handle)
         output = self.handle.getvalue()
         expected = ""
         self.assertEqual(output, expected)
 
-    def test_genbankWriteDocSums_results_000(self) :
-        result = mod.genbankWriteDocSums(self.docsumsResults, self.handle)
+    def test_writeDocSums_results_000(self) :
+        result = mod.writeDocSums(self.docsumsResults, self.handle)
         self.assertIsNone(result)
 
-    def test_genbankWriteDocSums_results_000b(self) :
-        result = mod.genbankWriteDocSums(self.docsumsResults, self.handle)
+    def test_writeDocSums_results_000b(self) :
+        result = mod.writeDocSums(self.docsumsResults, self.handle)
         output = self.handle.getvalue()
         with open(os.path.join(CUR_DIR, "test_genbank",
                                "test_genbankParseDocSumXML",
