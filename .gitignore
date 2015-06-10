@@ -1,3 +1,7 @@
 pygenbank.egg-info
 genbank.pyc
 docs/_build/
+cover/
+*.pyc
+tests/nosetests.html
+.coverage
