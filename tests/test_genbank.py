@@ -597,3 +597,42 @@ class TestGenbankWriteDocSums(unittest.TestCase) :
                                "docSum_results.table"), "r") as fi :
                   expected = fi.read()
         self.assertEqual(output, expected)
+
+### ** Test _recordIsWGS
+
+class TestRecordIsWGS(unittest.TestCase) :
+
+### *** setUp and tearDown
+
+    def setUp(self) :
+        self.recordNoWGS = (""
+        "Dummy record\n"
+        "\n"
+        "This is a dummy record\n"
+        "No WGS at beginning of line\n")
+        self.recordWGS =  (""
+        "Dummy record\n"
+        "\n"
+        "This is a dummy record\n"
+        "WGS at beginning of line\n")
+        self.recordWGStwice =  (""
+        "Dummy record\n"
+        "\n"
+        "This is a dummy record\n"
+        "WGS at beginning of line\n"
+        "WGS again on another line\n")
+
+### *** Test
+
+    def test_recordIsWGS_noWGS(self) :
+        result = mod._recordIsWGS(self.recordNoWGS)
+        self.assertFalse(result)
+
+    def test_recordIsWGS_WGS(self) :
+        result = mod._recordIsWGS(self.recordWGS)
+        expected = "WGS at beginning of line"
+        self.assertEqual(result, expected)
+
+    def test_recordIsWGS_error(self) :
+        with self.assertRaises(Exception) :
+            result = mod._recordIsWGS(self.recordWGStwice)
