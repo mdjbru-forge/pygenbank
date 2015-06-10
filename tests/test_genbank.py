@@ -26,7 +26,7 @@ import genbank as mod
 
 ### ** Parameters
 
-# http://stackoverflow.com/questions/4934806/how-can-i-find-scripts-directory-with-pythonhttp://stackoverflow.com/questions/4934806/how-can-i-find-scripts-directory-with-python
+# http://stackoverflow.com/questions/4934806/how-can-i-find-scripts-directory-with-python
 CUR_DIR = os.path.dirname(os.path.realpath(__file__))
 
 ### * Run
