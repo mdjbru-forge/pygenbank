@@ -5,6 +5,8 @@ Description
 
 Python tool to provide a simple interface to NCBI's GenBank database.
 
+The code is written for Python 2.7.
+
 PyGenBank is built on top of Biopython and can be used to perform a search on
 GenBank and download records.
 
