@@ -26,8 +26,10 @@ import StringIO
 import hashlib
 import urllib2
 import gzip
+
 from Bio import Entrez
 from Bio import SeqIO
+import pyprind
 
 ### ** Default variables
 
@@ -313,12 +315,16 @@ def downloadRecords(idList, destDir, batchSize, delay = 30,
         newIdList = idList
     else :
         newIdList = [x for x in idList if not ((x + ".gb") in existingFileList)]
+
     # Download the batches
-    for i in range(0, len(newIdList), batchSize) :
+    bar = pyprind.ProgBar(len(newIdList) / batchSize, monitor=True,
+                          title='Downloading the batches')
+    for i in range(0, len(newIdList), batchSize):
         end = min(len(newIdList), i + batchSize)
         batch = newIdList[i: end]
         _downloadBatch(batch, destDir, downloadFullWGS)
         time.sleep(delay)
+        bar.update()
 
 ### *** _downloadBatch(idBatch, destDir, downloadFullWGS = False)
 
@@ -347,7 +353,7 @@ def _downloadBatch(idBatch, destDir, downloadFullWGS = False) :
     r = _getRecordBatch(idBatch)
     # Split the downloaded strings into records
     r = r.strip().split("\n//")
-    print(r)
+    # print(r)
     assert r[-1] == ""
     r = r[0: -1]
     assert len(r) == len(idBatch)
