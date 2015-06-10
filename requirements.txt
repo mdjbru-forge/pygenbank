@@ -1,2 +1,2 @@
-biopython
-sphinxcontrib-napoleon
+biopython==1.65
+sphinxcontrib-napoleon==0.3.7
