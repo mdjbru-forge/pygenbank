@@ -656,3 +656,31 @@ class TestRecordIsWGS(unittest.TestCase) :
     def test_recordIsWGS_error(self) :
         with self.assertRaises(Exception) :
             result = mod._recordIsWGS(self.recordWGStwice)
+
+### ** Test _makeWGSurl
+
+class TestMakeWGSurl(unittest.TestCase) :
+
+### *** Test
+
+    def test_makeWGSurl_bad_start_000(self) :
+        wgs = ""
+        with self.assertRaises(Exception) :
+            result = mod._makeWGSurl(wgs)
+
+    def test_makeWGSurl_bad_start_001(self) :
+        wgs = " WGS "
+        with self.assertRaises(Exception) :
+            result = mod._makeWGSurl(wgs)
+    
+    def test_makeWGSurl_000(self) :
+        wgs = "WGS         LBDC01000001-LBDC01000059"
+        expected = "http://www.ncbi.nlm.nih.gov/Traces/wgs/?download=LBDC01.1.gbff.gz"
+        result = mod._makeWGSurl(wgs)
+        self.assertEqual(result, expected)
+
+    def test_makeWGSurl_001(self) :
+        wgs = "WGS         AVVN01000001-AVVN01000071"
+        expected = "http://www.ncbi.nlm.nih.gov/Traces/wgs/?download=AVVN01.1.gbff.gz"
+        result = mod._makeWGSurl(wgs)
+        self.assertEqual(result, expected)
