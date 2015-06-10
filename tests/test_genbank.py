@@ -255,10 +255,13 @@ class TestCheckEmailOption(unittest.TestCase) :
         self.parser = mod._makeParser_search()
         self.stderr = StringIO.StringIO()
         self.oldEntrezEmail = mod.Entrez.email
-
+        self.oldSysStderr = sys.stderr
+        sys.stderr = StringIO.StringIO()
+        
     def tearDown(self) :
         mod.Entrez.email = self.oldEntrezEmail
-
+        sys.stderr = self.oldSysStderr
+        
 ### *** Test
 
     def test_checkEmailOption_None(self) :
@@ -274,6 +277,23 @@ class TestCheckEmailOption(unittest.TestCase) :
     def test_checkEmailOption_initial_Entrez_email(self) :
         self.assertIsNone(mod.Entrez.email)
 
+    def test_checkEmailOption_stderr_None_000(self) :
+        args = self.parser.parse_args([])
+        with self.assertRaises(SystemExit) :
+            result = mod._checkEmailOption(args)
+
+    def test_checkEmailOption_stderr_None_001(self) :
+        args = self.parser.parse_args([])
+        try :
+            result = mod._checkEmailOption(args)
+        except SystemExit :
+            sys.stderr.seek(0)
+            expected = ("To make use of NCBI's E-utilities, NCBI requires you to "
+            "specify\nyour email address with each request. In case of excessive\n"
+            "usage of the E-utilities, NCBI will attempt to contact a user\n"
+            "at the email address provided before blocking access to the\n"
+            "E-utilities.\nPlease provide your email address using --email")
+            self.assertEqual(expected, sys.stderr.read())
 
 ### ** Test search
 
