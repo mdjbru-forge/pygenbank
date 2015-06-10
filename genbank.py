@@ -319,7 +319,7 @@ def downloadRecords(idList, destDir, batchSize, delay = 30,
     # Download the batches
     bar = pyprind.ProgBar(len(newIdList) / batchSize, monitor=True,
                           title='Downloading the batches')
-    for i in range(0, len(newIdList), batchSize) :
+    for i in range(0, len(newIdList), batchSize):
         end = min(len(newIdList), i + batchSize)
         batch = newIdList[i: end]
         _downloadBatch(batch, destDir, downloadFullWGS)
