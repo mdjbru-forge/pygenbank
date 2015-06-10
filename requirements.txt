@@ -1,2 +1,4 @@
 biopython==1.65
+psutil==2.2.1
+Pyprind==2.9.2
 sphinxcontrib-napoleon==0.3.7
