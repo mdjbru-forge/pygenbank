@@ -18,26 +18,46 @@ Setup the environment
 
 ::
 
-   import genbank
+   import genbank as gb
 
    # Setup your email address for Entrez
-   genbank.Entrez.email = "yourname@youraddress"
+   gb.Entrez.email = "yourname@youraddress"
 
 
-Search GenBank and retrieve record id
-*************************************
+Search GenBank and retrieve record ids
+**************************************
 
 Performing a GenBank search is as simple as::
 
    # Perform a GenBank search
-   mySearch = genbank.search(term = "hemocyanin", retmax = 100)
+   mySearch = gb.search(term = "hemocyanin")
 
+The returned value is a ``Bio.Entrez.Parser.DictionaryElement`` which contains
+information about the returned results::
+
+  mySearch.keys() # Available information
+  mySearch["Count"] # Number of entries found
+  mySearch["QueryTranslation"] # How the query was understood by GenBank
+  mySearch["IdList"] # List of GenBank identifiers returned
+   
+Any query string that you would be using on the GenBank web page can be used
+as the term::
+
+  mySearch = gb.search(term = "hemocyanin AND lito* [ORGN]")
+  mySearch["Count"]
+  mySearch = gb.search(term = "citrate synthase AND mus m* [ORGN]
+
+To get more details about the returned entries, you can fetch the record
+summaries using the previous search result::
+
+  summaries = gb.getDocSum(mySearch)
+  
 The search results can be used to get summaries of the results and apply some
 simple filtering on the record id before proceeding to the actual record
 downloading::
    
    # Get the summaries from the results
-   summaries = genbank.getDocSum(mySearch)
+   summaries = gb.getDocSum(mySearch)
 
    # Extract the id of interest ("Gi" field)
    myId = [x["Gi"] for x in summaries if int(x["Length"]) < 10000]
