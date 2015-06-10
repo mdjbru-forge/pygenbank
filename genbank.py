@@ -421,17 +421,18 @@ def _downloadWGS(WGSurl) :
           :func:`_makeWGSurl`
 
     Returns:
-        str: Uncompressed GenBank file content
+        str: Uncompressed GenBank file content. Return None if there was a 
+          problem during gzip decompression.
 
     """
     gzipContent = urllib2.urlopen(WGSurl).read()
     gzipFile = StringIO.StringIO(gzipContent)
     o = gzip.GzipFile(fileobj = gzipFile)
+    output = None
     try :
         output = o.read()
     except IOError as e:
         print(e)
-        o = "Error: " + e
     o.close()
     return output
 

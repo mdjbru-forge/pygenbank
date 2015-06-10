@@ -684,3 +684,63 @@ class TestMakeWGSurl(unittest.TestCase) :
         expected = "http://www.ncbi.nlm.nih.gov/Traces/wgs/?download=AVVN01.1.gbff.gz"
         result = mod._makeWGSurl(wgs)
         self.assertEqual(result, expected)
+
+### ** Test _downloadWGS
+
+class TestDownloadWGS(unittest.TestCase) :
+
+# Great help from http://www.saltycrane.com/blog/2012/11/using-pythons-gzip-and-stringio-compress-data-memory/
+    
+### *** setUp and tearDown
+
+    def setUp(self) :
+        self.oldUrlopen = mod.urllib2.urlopen
+        self.calledUrl = None
+        def f(url) :
+            self.calledUrl = url
+            s = url + " going through compression/decompression"
+            o = StringIO.StringIO()
+            g = mod.gzip.GzipFile(fileobj = o, mode = "w")
+            g.write(s)
+            g.close()
+            o.seek(0)
+            return o
+        mod.urllib2.urlopen = f
+        self.oldStdout = sys.stdout
+        sys.stdout = StringIO.StringIO()
+        
+    def tearDown(self) :
+        mod.urllib2.urlopen = self.oldUrlopen
+        sys.stdout = self.oldStdout
+    
+### *** Test
+
+    def test_downloadWGS_url(self) :
+        url = "testUrl"
+        result = mod._downloadWGS(url)
+        self.assertEqual(self.calledUrl, "testUrl")
+        
+
+    def test_downloadWGS_000(self) :
+        url = "testUrl"
+        result = mod._downloadWGS(url)
+        expected = "testUrl going through compression/decompression"
+        self.assertEqual(result, expected)
+
+    def test_downloadWGS_error_000(self) :
+        url = "testUrl"
+        def f(x) :
+            return StringIO.StringIO("toto")
+        mod.urllib2.urlopen = f
+        result = mod._downloadWGS(url)
+        self.assertIsNone(result)
+
+    def test_downloadWGS_error_001(self) :
+        url = "testUrl"
+        def f(x) :
+            return StringIO.StringIO("toto")
+        mod.urllib2.urlopen = f
+        result = mod._downloadWGS(url)
+        expected = "Not a gzipped file\n"
+        sys.stdout.seek(0)
+        self.assertEqual(sys.stdout.read(), expected)
