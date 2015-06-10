@@ -1,9 +1,9 @@
-.. pyGenBank documentation master file, created by
+.. pygenbank documentation master file, created by
    sphinx-quickstart.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to pyGenBank's documentation!
+Welcome to pygenbank's documentation!
 =====================================
 
 Description

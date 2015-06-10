@@ -20,7 +20,7 @@ and from Python::
   
 **To remove the module and the command line tools**, type::
 
-  sudo pip uninstall pyGenBank 
+  sudo pip uninstall pygenbank 
    
 Installation from a cloned repository
 -------------------------------------

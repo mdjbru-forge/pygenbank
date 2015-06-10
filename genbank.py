@@ -674,15 +674,15 @@ def _CDSinfo(CDS, outfmt, fmtdictCDS = None,
 
 ### * Main scripts functions
 
-### ** pyGenBank-search
+### ** pygenbank-search
 
 # Wishlist
 #
-# pyGenBank-search --query "blabla" >> docsum.table
-# pyGenBank-search --query "blabla" --download
-# pyGenBank-search --idlist myId.list >> docsum.table
-# pyGenBank-search --idlist myId.list --download
-# pyGenBank-search --idlist myId.list --download --outputDir ./GenBank
+# pygenbank-search --query "blabla" >> docsum.table
+# pygenbank-search --query "blabla" --download
+# pygenbank-search --idlist myId.list >> docsum.table
+# pygenbank-search --idlist myId.list --download
+# pygenbank-search --idlist myId.list --download --outputDir ./GenBank
 
 ### *** _main_search(args = None, stdout = None, stderr = None)
 
@@ -870,15 +870,15 @@ def _checkRetmax(retmax, stderr) :
                      "(http://www.ncbi.nlm.nih.gov/genbank/)\n")
         sys.exit()
 
-### ** pyGenBank-extract-CDS
+### ** pygenbank-extract-CDS
 
 # Wishlist
 #
-# pyGenBank-extract-CDS --outfmt orgn,gi,cds,nuc,pos,hash --hash sha512 --summary mySummaries *.gb
-# pyGenBank-extract-CDS *.gb > mySummaries # default outfmt and --summary
-# pyGenBank-extract-CDS --unique myUniqueCDS --hash md5sum *.gb > mySummaries # produce fasta
-# pyGenBank-extract-CDS --unique myUniqueCDS --hash md5sum --outfmt org,gi,cds,nuc,pos,hash *.gb > mySummaries
-# pyGenBank-extract-CDS --unique myUniqueCDS --hash md5sum --summary mySummaries --outfmt org,gi,cds,nuc,pos,hash *.gb
+# pygenbank-extract-CDS --outfmt orgn,gi,cds,nuc,pos,hash --hash sha512 --summary mySummaries *.gb
+# pygenbank-extract-CDS *.gb > mySummaries # default outfmt and --summary
+# pygenbank-extract-CDS --unique myUniqueCDS --hash md5sum *.gb > mySummaries # produce fasta
+# pygenbank-extract-CDS --unique myUniqueCDS --hash md5sum --outfmt org,gi,cds,nuc,pos,hash *.gb > mySummaries
+# pygenbank-extract-CDS --unique myUniqueCDS --hash md5sum --summary mySummaries --outfmt org,gi,cds,nuc,pos,hash *.gb
 
 ### *** _main_extract_CDS(args = None, stdout = None, stderr = None,
 #                         gb_record_fmtdict, gb_cds_fmtdict)
