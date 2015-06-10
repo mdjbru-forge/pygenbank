@@ -78,7 +78,7 @@ GET_ATTR_FUNCS = {
 
 ### *** search(term, retmax)
 
-def search(term, retmax) :
+def search(term, retmax = None) :
     """Search GenBank for a given query string. Perform a Bio.Entrez.esearch on
     db="nuccore", using history.
 
@@ -608,7 +608,7 @@ def _makeSummaryForCDS(record, CDS, hStr, summaryFormat, getAttrFuncs = None) :
 
 ### *** _recordInfo(record, outfmt, fmtdict)
 
-def _recordInfo(record, outfmt, fmtdict = _GB_RECORD_FMTDICT) :
+def _recordInfo(record, outfmt, fmtdict = None) :
     """Get some information about a GenBank record (stored as a
     Bio.SeqRecord.SeqRecord object).
 
@@ -616,19 +616,22 @@ def _recordInfo(record, outfmt, fmtdict = _GB_RECORD_FMTDICT) :
         record (Bio.SeqRecord.SeqRecord): GenBank record
         outfmt (list of str): List of information keys
         fmtdict (dict): Dictionary mapping the information keys to simple 
-          functions to retrieve the corresponding information
+          functions to retrieve the corresponding information. If None, use
+          the default _GB_RECORD_FMTDICT
 
     Returns:
         List: List containing the information corresponding to each key in 
           `outfmt`
 
     """
+    if fmtdict is None :
+        fmtdict = _GB_RECORD_FMTDICT
     return [fmtdict[x](record) for x in outfmt]
 
 ### *** _CDSinfo(CDS, outfmt, fmtdict)
 
-def _CDSinfo(CDS, outfmt, fmtdictCDS = _GB_CDS_FMTDICT,
-                    fmtdictRecord = _GB_RECORD_FMTDICT,
+def _CDSinfo(CDS, outfmt, fmtdictCDS = None,
+                    fmtdictRecord = None,
                     parentRecord = None, hashConstructor = None) :
     """Get some information about a GenBank CDS (stored as a
     Bio.SeqFeature.SeqFeature object of type "CDS").
@@ -636,8 +639,12 @@ def _CDSinfo(CDS, outfmt, fmtdictCDS = _GB_CDS_FMTDICT,
     Args:
         CDS (Bio.SeqFeature.SeqFeature of type "CDS"): GenBank CDS
         outfmt (list of str): List of information keys
-        fmtdict (dict): Dictionary mapping the information keys to simple 
-          functions to retrieve the corresponding information
+        fmtdictCDS (dict): Dictionary mapping the information keys to simple 
+          functions to retrieve the corresponding information (for CDS 
+          attributes). If None, default is _GB_CDS_FMTDICT.
+        fmtdictRecord (dict): Dictionary mapping the information keys to simple 
+          functions to retrieve the corresponding information (for record 
+          attributes). If None, default is _GB_RECORD_FMTDICT.
         parentRecord (Bio.SeqRecord.SeqRecord): Parent record, needed to extract
           nucleotide sequence and other record-related information
         hashConstructor (function): Hash algorithm to be used (from the 
@@ -648,6 +655,10 @@ def _CDSinfo(CDS, outfmt, fmtdictCDS = _GB_CDS_FMTDICT,
           in `outfmt`
 
     """
+    if fmtdictCDS is None :
+        fmtdictCDS = _GB_CDS_FMTDICT
+    if fmtdictRecord is None :
+        fmtdictRecord = _GB_RECORD_FMTDICT
     CDS.parentRecord = parentRecord
     info = dict()
     for k in [x for x in outfmt if x in fmtdictCDS.keys()] :
@@ -673,9 +684,9 @@ def _CDSinfo(CDS, outfmt, fmtdictCDS = _GB_CDS_FMTDICT,
 # pyGenBank-search --idlist myId.list --download
 # pyGenBank-search --idlist myId.list --download --outputDir ./GenBank
 
-### *** _main_search(args = None, stdout = sys.stdout, stderr = sys.stderr)
+### *** _main_search(args = None, stdout = None, stderr = None)
 
-def _main_search(args = None, stdout = sys.stdout, stderr = sys.stderr) :
+def _main_search(args = None, stdout = None, stderr = None) :
 
     """Main function, used by the command line script "-search". This function
     sends the arguments to :func:`_processArgsToLogic_search` to determine
@@ -684,14 +695,17 @@ def _main_search(args = None, stdout = sys.stdout, stderr = sys.stderr) :
     Args:
         args (namespace): Namespace with script arguments, parse the command 
           line arguments if None
-        stdout (file): Writable stdout stream (default `sys.stdout`)
-        stderr (file): Writable stderr stream (default `sys.stderr`)
+        stdout (file): Writable stdout stream (if None, use `sys.stdout`)
+        stderr (file): Writable stderr stream (if None, use `sys.stderr`)
 
     Returns:
         None
 
     """
-
+    if stdout is None :
+        stdout = sys.stdout
+    if stderr is None :
+        stderr = sys.stderr
     # Process arguments
     if args is None :
         parser = _makeParser_search()
@@ -817,21 +831,23 @@ def _processArgsToLogic_search(args, stdout, stderr) :
         sys.exit()
     return args
 
-### *** _checkEmailOption(args, stderr = sys.stderr)
+### *** _checkEmailOption(args, stderr = None)
 
-def _checkEmailOption(args, stderr = sys.stderr) :
+def _checkEmailOption(args, stderr = None) :
     """Check that an email option was provided and setup Entrez email, produce 
     a message and exit if not.
 
     Args:
         args (namespace): Output from `parser.parse_args()`
-        stderr (file): Writable stderr stream (default `sys.stderr`)
+        stderr (file): Writable stderr stream (if None, use `sys.stderr`)
 
     Returns:
         Nothing, but setup Entrez.email or exit the program with a message to 
           stderr if no email was provided
 
     """
+    if stderr is None :
+        stderr = sys.stderr
     if args.email is None :
         stderr.write("To make use of NCBI's E-utilities, NCBI requires you to specify\n"
               "your email address with each request. In case of excessive\n"
@@ -864,12 +880,12 @@ def _checkRetmax(retmax, stderr) :
 # pyGenBank-extract-CDS --unique myUniqueCDS --hash md5sum --outfmt org,gi,cds,nuc,pos,hash *.gb > mySummaries
 # pyGenBank-extract-CDS --unique myUniqueCDS --hash md5sum --summary mySummaries --outfmt org,gi,cds,nuc,pos,hash *.gb
 
-### *** _main_extract_CDS(args = None, stdout = sys.stdout, stderr = sys.stderr,
+### *** _main_extract_CDS(args = None, stdout = None, stderr = None,
 #                         gb_record_fmtdict, gb_cds_fmtdict)
 
-def _main_extract_CDS(args = None, stdout = sys.stdout, stderr = sys.stderr,
-                      gb_record_fmtdict = _GB_RECORD_FMTDICT,
-                      gb_cds_fmtdict = _GB_CDS_FMTDICT) :
+def _main_extract_CDS(args = None, stdout = None, stderr = None,
+                      gb_record_fmtdict = None,
+                      gb_cds_fmtdict = None) :
     """Main function, used by the command line script "-extract-CDS". This function
     sends the arguments to :func:`_processArgsToLogic_extract_CDS` to determine
     which actions must be performed, and then performs the actions.
@@ -877,19 +893,27 @@ def _main_extract_CDS(args = None, stdout = sys.stdout, stderr = sys.stderr,
     Args:
         args (namespace): Namespace with script arguments, parse the command 
           line arguments if None
-        stdout (file): Writable stdout stream (default `sys.stdout`)
-        stderr (file): Writable stderr stream (default `sys.stderr`)
+        stdout (file): Writable stdout stream (if None, use `sys.stdout`)
+        stderr (file): Writable stderr stream (if None, use `sys.stderr`)
         gb_record_fmtdict (dict): Dictionary mapping outfmt specifiers to 
           functions to extract the corresponding information from GenBank 
-          records
+          records. If None, default is _GB_RECORD_FMTDICT.
         gb_cds_fmtdict (dict): Dictionary mapping outfmt specifiers to 
           functions to extract the corresponding information from GenBank
-          CDS
+          CDS. If None, default is _GB_CDS_FMTDICT.
 
     Returns:
         None
 
     """
+    if stdout is None :
+        stdout = sys.stdout
+    if stderr is None :
+        stderr = sys.stderr
+    if gb_record_fmtdict is None :
+        gb_record_fmtdict = _GB_RECORD_FMTDICT
+    if gb_cds_fmtdict is None :
+        gb_cds_fmtdict = _GB_CDS_FMTDICT
     # Process arguments
     if args is None :
         parser = _makeParser_extract_CDS()
