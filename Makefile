@@ -30,8 +30,6 @@ Help:
 	@echo "  doc              Run Sphinx to make the docs                    "
 	@echo "  clean            Remove generated doc, tests and pyc files      "
 	@echo "                                                                  "
-	@echo "You need sudo rights for the following ones:                      "
-	@echo "                                                                  "
 	@echo "  install          Install the module and command-line tools      "
 	@echo "  uninstall        Uninstall the module                           "
 
@@ -63,7 +61,7 @@ clean:
 ### ** install
 install:
 	rm -fr $(PYTHON_MODULE_EGG)
-	pip install -e .
+	pip install --user -e .
 
 ### ** uninstall
 uninstall:
