@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE eSummaryResult PUBLIC "-//NLM//DTD esummary v1 20060131//EN" "http://eutils.ncbi.nlm.nih.gov/eutils/dtd/20060131/esummary-v1.dtd">
+<eSummaryResult>
+
+<DocSum>
+	<Id>25136929</Id>
+	<Item Name="Caption" Type="String">AJ516004</Item>
+	<Item Name="Title" Type="String">Palinurus elephas mRNA for hemocyanin subunit 4 (hc4 gene)</Item>
+	<Item Name="Extra" Type="String">gi|25136929|emb|AJ516004.1|[25136929]</Item>
+	<Item Name="Gi" Type="Integer">25136929</Item>
+	<Item Name="CreateDate" Type="String">2002/11/14</Item>
+	<Item Name="UpdateDate" Type="String">2005/04/15</Item>
+	<Item Name="Flags" Type="Integer">0</Item>
+	<Item Name="TaxId" Type="Integer">198232</Item>
+	<Item Name="Length" Type="Integer">2298</Item>
+	<Item Name="Status" Type="String">live</Item>
+	<Item Name="ReplacedBy" Type="String"></Item>
+	<Item Name="Comment" Type="String"><![CDATA[  ]]></Item>
+</DocSum>
+
+<DocSum>
+	<Id>15528530</Id>
+	<Item Name="Caption" Type="String">AJ344363</Item>
+	<Item Name="Title" Type="String">Palinurus vulgaris mockmock partial mRNA for hemocyanin subunit 3 (hc3 gene)</Item>
+	<Item Name="Extra" Type="String">gi|15528530|emb|AJ344363.1|[15528530]</Item>
+	<Item Name="Gi" Type="Integer">15528530</Item>
+	<Item Name="CreateDate" Type="String">2001/09/06</Item>
+	<Item Name="UpdateDate" Type="String">2005/04/15</Item>
+	<Item Name="Flags" Type="Integer">0</Item>
+	<Item Name="TaxId" Type="Integer">6733</Item>
+	<Item Name="Length" Type="Integer">2275</Item>
+	<Item Name="Status" Type="String">live</Item>
+	<Item Name="ReplacedBy" Type="String"></Item>
+	<Item Name="Comment" Type="String"><![CDATA[  ]]></Item>
+</DocSum>
+
+<DocSum>
+	<Id>15528528</Id>
+	<Item Name="Caption" Type="String">AJ344362</Item>
+	<Item Name="Title" Type="String">Palinurus vulgaris partial mRNA for hemocyanin subunit 2 (hc2 gene)</Item>
+	<Item Name="Extra" Type="String">gi|15528528|emb|AJ344362.1|[15528528]</Item>
+	<Item Name="Gi" Type="Integer">15528528</Item>
+	<Item Name="CreateDate" Type="String">2001/09/06</Item>
+	<Item Name="UpdateDate" Type="String">2005/04/15</Item>
+	<Item Name="Flags" Type="Integer">0</Item>
+	<Item Name="TaxId" Type="Integer">6733</Item>
+	<Item Name="Length" Type="Integer">2287</Item>
+	<Item Name="Status" Type="String">live</Item>
+	<Item Name="ReplacedBy" Type="String"></Item>
+	<Item Name="Comment" Type="String"><![CDATA[  ]]></Item>
+</DocSum>
+
+<DocSum>
+	<Id>15528526</Id>
+	<Item Name="Caption" Type="String">AJ344361</Item>
+	<Item Name="Title" Type="String">Palinurus vulgaris partial mRNA for hemocyanin subunit 1 (hc1 gene)</Item>
+	<Item Name="Extra" Type="String">gi|15528526|emb|AJ344361.1|[15528526]</Item>
+	<Item Name="Gi" Type="Integer">15528526</Item>
+	<Item Name="CreateDate" Type="String">2001/09/06</Item>
+	<Item Name="UpdateDate" Type="String">2005/04/15</Item>
+	<Item Name="Flags" Type="Integer">0</Item>
+	<Item Name="TaxId" Type="Integer">6733</Item>
+	<Item Name="Length" Type="Integer">2286</Item>
+	<Item Name="Status" Type="String">live</Item>
+	<Item Name="ReplacedBy" Type="String"></Item>
+	<Item Name="Comment" Type="String"><![CDATA[  ]]></Item>
+</DocSum>
+</eSummaryResult>

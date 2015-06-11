@@ -791,3 +791,75 @@ class TestGetDocSumXML(unittest.TestCase) :
         self.assertTrue(all([result["webenv"] == "toto",
                              result["query_key"] == "tata",
                              result["retmax"] == "100"]))
+
+### ** Test getDocSum
+
+class TestGetDocSum(unittest.TestCase) :
+
+### *** setUp and tearDown
+
+    def setUp(self) :
+        with open(os.path.join(CUR_DIR,
+                               "test_genbank",
+                               "test_parseDocSumXML",
+                               "docSum_noResults.xml"), "r") as fo :
+            self.xml_noResults = fo.read()
+        with open(os.path.join(CUR_DIR,
+                               "test_genbank",
+                               "test_parseDocSumXML",
+                               "docSum_results.xml"), "r") as fo :
+            self.xml_results = fo.read()
+        with open(os.path.join(CUR_DIR,
+                               "test_genbank",
+                               "test_parseDocSumXML",
+                               "docSum_results-mockmock.xml"), "r") as fo :
+            self.xml_results_mockmock = fo.read()
+        self.oldEfetch = mod.Entrez.efetch
+        def f(db, rettype, retmode, retstart, retmax, webenv, query_key) :
+            check = [db == "nuccore",
+                     rettype == "docsum",
+                     retmode == "xml",
+                     retstart == 0,
+                     webenv == "totoWebEnv",
+                     query_key == "totoQueryKey"]
+            if all(check) :
+                if retmax == 50 :
+                    s = self.xml_results
+                if retmax == 25 :
+                    s = self.xml_results_mockmock
+            else :
+                s = "Some parameters to efetch were incorrect"
+            o = StringIO.StringIO(s)
+            return o
+        mod.Entrez.efetch = f
+
+    def tearDown(self) :
+        mod.Entrez.efetch = self.oldEfetch
+
+### *** Test
+
+    def test_getDocSum_000(self) :
+        searchResult = {"WebEnv" : "totoWebEnv",
+                        "QueryKey" : "totoQueryKey",
+                        "RetMax" : 50}
+        result = mod.getDocSum(searchResult)
+        expected = set(["Status", "Comment", "Extra", "CreateDate", "Title",
+                        "TaxId", "ReplacedBy", "Caption", "Length", "Flags",
+                        "UpdateDate", "Gi"])
+        self.assertEqual(set(result[0].keys()), expected)
+
+    def test_getDocSum_001(self) :
+        searchResult = {"WebEnv" : "totoWebEnv",
+                        "QueryKey" : "totoQueryKey",
+                        "RetMax" : 50}
+        result = mod.getDocSum(searchResult)
+        expected = "Palinurus vulgaris partial mRNA for hemocyanin subunit 3 (hc3 gene)"
+        self.assertEqual(result[1]["Title"], expected)
+
+    def test_getDocSum_002(self) :
+        searchResult = {"WebEnv" : "totoWebEnv",
+                        "QueryKey" : "totoQueryKey",
+                        "RetMax" : 50}
+        result = mod.getDocSum(searchResult, 25)
+        expected = "Palinurus vulgaris mockmock partial mRNA for hemocyanin subunit 3 (hc3 gene)"
+        self.assertEqual(result[1]["Title"], expected)
