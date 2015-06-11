@@ -744,3 +744,50 @@ class TestDownloadWGS(unittest.TestCase) :
         expected = "Not a gzipped file\n"
         sys.stdout.seek(0)
         self.assertEqual(sys.stdout.read(), expected)
+
+### ** Test getDocSumXML
+
+class TestGetDocSumXML(unittest.TestCase) :
+
+### *** setUp and tearDown
+
+    def setUp(self) :
+        self.oldEfetch = mod.Entrez.efetch
+        def f(db, rettype, retmode, retstart, retmax, webenv, query_key) :
+            o = StringIO.StringIO()
+            s = []
+            for i, j in zip(["db", "rettype", "retmode", "retstart",
+                             "retmax", "webenv", "query_key"],
+                            [db, rettype, retmode, retstart, retmax,
+                             webenv, query_key]) :
+                s += ["_:_".join([str(i), str(j)])]
+            o.write("\t".join(s))
+            o.seek(0)
+            return o
+        def g(s) :
+            entries = s.split("\t")
+            pairs = [x.split("_:_") for x in entries]
+            return dict(pairs)
+        mod.Entrez.efetch = f
+        self.resultToDict = g
+
+    def tearDown(self) :
+        mod.Entrez.efetch = self.oldEfetch
+
+### *** Test
+
+    def test_getDocSumXML_000(self) :
+        searchResult = {"WebEnv" : "toto", "QueryKey" : "tata",
+                        "RetMax" : 50}
+        result = self.resultToDict(mod._getDocSumXML(searchResult))
+        self.assertTrue(all([result["webenv"] == "toto",
+                             result["query_key"] == "tata",
+                             result["retmax"] == "50"]))
+        
+    def test_getDocSumXML_001(self) :
+        searchResult = {"WebEnv" : "toto", "QueryKey" : "tata",
+                        "RetMax" : 50}
+        result = self.resultToDict(mod._getDocSumXML(searchResult, 100))
+        self.assertTrue(all([result["webenv"] == "toto",
+                             result["query_key"] == "tata",
+                             result["retmax"] == "100"]))
