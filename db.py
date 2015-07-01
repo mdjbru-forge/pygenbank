@@ -6,6 +6,8 @@
 
 ### ** Import
 
+import warnings
+
 ### * Functions
 
 ### ** extractCodingSeqFast(CDS, seqRecord)
@@ -24,7 +26,10 @@ def extractCodingSeqFast(CDS, seqRecord) :
           nucleotide from
     """
     if len(CDS.location.parts) > 1 :
-        raise Exception("CDS with complex location, use extractCodingSeqReliable()")
+        warnings.warn("CDS with complex location, using "
+                      "extractCodingSeqReliable()\n" +
+                      str(CDS.location))
+        return extractCodingSeqReliable(CDS, seqRecord)
     seq = seqRecord.seq[CDS.location.start:CDS.location.end]
     if CDS.location.strand == -1 :
         seq = seq.reverse_complement()
