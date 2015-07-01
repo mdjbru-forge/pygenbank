@@ -749,47 +749,54 @@ def _makeParser_search() :
     """
     parser = argparse.ArgumentParser(
         description = SCRIPT_DESCRIPTION_SEARCH)
+    # Required named arguments (http://stackoverflow.com/questions/24180527/argparse-required-arguments-listed-under-optional-arguments)
+    required = parser.add_argument_group("required named arguments")
     # --email
-    parser.add_argument("-e", "--email", type = str,
+    required.add_argument("-e", "--email", type = str,
+                        required = True,
                         help = "User's email (required by Entrez)")
     # --listId
-    parser.add_argument("-l", "--listId", type = str,
-                        help = "File containing one GenBank identifier per "
-                        "line. Use - for reading for stdin. --listId or "
-                        "--query must be specified, but not both.")
+    required.add_argument("-l", "--listId", type = str,
+                          help = "File containing one GenBank identifier per "
+                          "line. Use - for reading from stdin. "
+                          "Exactly one of --listId or "
+                          "--query must be specified, but not both.")
     # --query
-    parser.add_argument("-q", "--query", type = str,
-                        help = "Query string for GenBank search. --query or "
-                        "--listId must be specified, but not both.",
-                        metavar = "SEARCH_TERM")
+    required.add_argument("-q", "--query", type = str,
+                          help = "Query string for GenBank search. "
+                          "Exactly one of --listId or "
+                          "--query must be specified, but not both.",
+                          metavar = "SEARCH_TERM")
+    # Download options
+    download = parser.add_argument_group("download-related options")
     # --retmax
-    parser.add_argument("-r", "--retmax", type = int, default = 0,
+    download.add_argument("-r", "--retmax", type = int, default = 0,
                         help = "Maximum number of entries to retrieve from "
                         "GenBank, comprised between 1 and 10000. Use 0 for "
                         "unlimited number of returned entries. (default: 0)")
     # --download
-    parser.add_argument("-d", "--download", action = "store_true",
+    download.add_argument("-d", "--download", action = "store_true",
                         help = "Download the full GenBank records")
     # --forceDownload
-    parser.add_argument("-f", "--forceDownload", action = "store_true",
+    download.add_argument("-f", "--forceDownload", action = "store_true",
                         help = "Download record even if file already exists "
                         "(implies --download)")
     # --fullWGS
-    parser.add_argument("--fullWGS", action = "store_true",
+    download.add_argument("--fullWGS", action = "store_true",
                         help = "Also download full WGS sequence data when "
                         "WGS trace reference is present in a GenBank record "
                         "(only works if the original GenBank record is to be "
                         "downloaded too or if --forceDownload is used)")
     # --outputDir
-    parser.add_argument("-o", "--outputDir", type = str, default = ".",
+    download.add_argument("-o", "--outputDir", type = str, default = ".",
                         help = "Destination folder for downloaded records "
                         "(default: current directory)")
     # --batchSize
-    parser.add_argument("-b", "--batchSize", type = int, default = 5,
+    download.add_argument("-b", "--batchSize", type = int, default = 5,
                         help = "Batch size for full record retrieval "
                         "(default: 5)")
     # --delay
-    parser.add_argument("--delay", type = int, default = 15,
+    download.add_argument("--delay", type = int, default = 15,
                         help = "Delay in seconds between successive batch "
                         "retrieval of the full records (default: 15)")
     return parser
