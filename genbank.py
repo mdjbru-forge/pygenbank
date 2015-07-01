@@ -44,10 +44,22 @@ _GB_RECORD_FMTDICT = {
     "src" : lambda x: x.annotations["source"]
 }
 
+def extractNt(c,r,h) :
+    # (c, r, h) = (CDS feature, GB record, seq hash)
+    seq = r.seq[c.location.start:c.location.end]
+    if c.location.strand == -1 :
+        seq = seq.reverse_complement()
+    a = c.qualifiers.get("translation", ["NA"])[0][1:].strip("*")
+    b = str(seq.translate(table = 11))[1:].strip("*")
+    if a != b :
+        sys.stderr.write(a + "\n")
+        sys.stderr.write(b + "\n")
+    return str(seq)
+
 _GB_CDS_FMTDICT = {
     "loc" : lambda x: str(x.location),
     "prot" : lambda x: ",".join(x.qualifiers.get("translation", ["NA"])),
-    "nuc": lambda x: str(x.extract(x.parentRecord).seq),
+    "nuc": extractNt,
     "prod" : lambda x: ",".join(x.qualifiers.get("product", ["NA"])),
     "gene" : lambda x: ",".join(x.qualifiers.get("gene", ["NA"])),
     "hash" : lambda x: x
@@ -68,7 +80,7 @@ GET_ATTR_FUNCS = {
     # CDS attributes
     "loc" : lambda c,r,h: str(c.location),
     "prot" : lambda c,r,h: ",".join(c.qualifiers.get("translation", ["NA"])),
-    "nuc": lambda c,r,h: str(c.extract(r).seq),
+    "nuc": extractNt,
     "prod" : lambda c,r,h: ",".join(c.qualifiers.get("product", ["NA"])),
     "gene" : lambda c,r,h: ",".join(c.qualifiers.get("gene", ["NA"])),
     "hash" : lambda c,r,h: h
