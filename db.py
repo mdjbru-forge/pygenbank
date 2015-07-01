@@ -88,3 +88,18 @@ class GeneTable(object) :
                         product = ";".join(CDS.qualifiers.get("product", [])),
                         proteinId = ";".join(CDS.qualifiers.get("protein_id", [])))
             self.genes.add(gene)
+
+### *** writeTable(self, path)
+
+    def writeTable(self, path) :
+        """Write gene information to a tabular file
+
+        Args:
+            path (str): Path to the file
+        """
+        with open(path, "w") as fo :
+            headers = list(Gene()._asdict().keys())
+            fo.write("#" + "\t".join(headers) + "\n")
+            for gene in self.genes :
+                geneDict = gene._asdict()
+                fo.write("\t".join([str(geneDict[x]) for x in headers]) + "\n")
