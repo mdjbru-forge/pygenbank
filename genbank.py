@@ -265,7 +265,7 @@ def writeDocSums(docsums, handle) :
     if docsums == [] :
         return None
     headers = docsums[0].keys()
-    handle.write("\t".join(headers) + "\n")
+    handle.write("#" + "\t".join(headers) + "\n")
     for i in docsums :
         handle.write("\t".join([i[h] for h in headers]) + "\n")
 
@@ -722,16 +722,22 @@ def _main_search(args = None, stdout = None, stderr = None) :
     # Genbank search
     if args.actionFlags.get("DoGenbankSearch", False) :
         mySearch = search(term = args.query, retmax = args.retmax)
+        if args.count :
+            stdout.write(mySearch["QueryTranslation"] + "\t" + str(mySearch["Count"]) + "\n")
+            sys.exit(0)
         myDocSums = getDocSum(mySearch)
         writeDocSums(myDocSums, stdout)
         listId = [x["Gi"] for x in myDocSums]
     # Get docsums for a list of identifiers
     if args.actionFlags.get("DoGetList", False) :
+        if args.count :
+            stderr.write("-l and -c cannot be used at the same time\n")
+            sys.exit(1)
         listId = _fileLinesToList(args.listId)
         myDocSums = getDocSumFromId(listId)
         writeDocSums(myDocSums, stdout)
     # Download records
-    if args.download :
+    if args.download and not args.count :
         assert listId is not None
         downloadRecords(idList = listId, destDir = args.outputDir,
                                batchSize = args.batchSize, delay = args.delay,
@@ -749,6 +755,8 @@ def _makeParser_search() :
     """
     parser = argparse.ArgumentParser(
         description = SCRIPT_DESCRIPTION_SEARCH)
+    parser.add_argument("-c", "--count", action = "store_true",
+                        help = "Just return the number of records, no fetch")
     # Required named arguments (http://stackoverflow.com/questions/24180527/argparse-required-arguments-listed-under-optional-arguments)
     required = parser.add_argument_group("required named arguments")
     # --email
