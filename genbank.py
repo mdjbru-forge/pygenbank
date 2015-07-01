@@ -761,7 +761,6 @@ def _makeParser_search() :
     required = parser.add_argument_group("required named arguments")
     # --email
     required.add_argument("-e", "--email", type = str,
-                        required = True,
                         help = "User's email (required by Entrez)")
     # --listId
     required.add_argument("-l", "--listId", type = str,
