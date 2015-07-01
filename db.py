@@ -6,6 +6,7 @@
 
 ### ** Import
 
+import collections
 import warnings
 
 ### * Functions
@@ -49,6 +50,14 @@ def extractCodingSeqReliable(CDS, seqRecord) :
     """
     return str(CDS.extract(seqRecord).seq)
 
+### * Named tuples
+
+Gene = collections.namedtuple("Gene", ["recordId", "peptideSeq", "codingSeq",
+                                       "translationTable", "gene", "product",
+                                       "proteinId", "function", "essentiality"])
+Gene.__new__.__defaults__ = (None, ) * 9
+# http://stackoverflow.com/questions/11351032/named-tuple-and-optional-keyword-arguments
+
 ### * Classes
 
 ### ** GeneTable()
@@ -71,27 +80,11 @@ class GeneTable(object) :
         """
         allCDS = [x for x in gbRecord.features if x.type == "CDS"]
         for CDS in allCDS :
-            self.genes.add(GeneRow(CDS, gbRecord))
-
-### ** GeneRow()
-
-class GeneRow(object) :
-    """Store the information about one gene"""
-
-### *** __init__(self, CDS, seqRecord)
-
-    def __init__(self, CDS, seqRecord) :
-        """Args:
-            CDS (Bio.SeqFeature.SeqFeature): Biopython feature object containing
-              the information about a CDS
-            seqRecord (Bio.SeqRecord.SeqRecord): GenBank Record object
-        """
-        self.recordId = "GI:" + seqRecord.annotations["gi"]
-        self.peptideSeq = ";".join(CDS.qualifiers.get("translation", []))
-        self.codingSeq = extractCodingSeqFast(CDS, seqRecord)
-        self.translationTable = ";".join(CDS.qualifiers.get("transl_table", []))
-        self.gene = ";".join(CDS.qualifiers.get("gene", []))
-        self.product = ";".join(CDS.qualifiers.get("product", []))
-        self.proteinId = ";".join(CDS.qualifiers.get("protein_id", []))
-        self.function = ""
-        
+            gene = Gene(recordId = "GI:" + gbRecord.annotations["gi"],
+                        peptideSeq = ";".join(CDS.qualifiers.get("translation", [])),
+                        codingSeq = extractCodingSeqFast(CDS, gbRecord),
+                        translationTable = ";".join(CDS.qualifiers.get("transl_table", [])),
+                        gene = ";".join(CDS.qualifiers.get("gene", [])),
+                        product = ";".join(CDS.qualifiers.get("product", [])),
+                        proteinId = ";".join(CDS.qualifiers.get("protein_id", [])))
+            self.genes.add(gene)
