@@ -81,14 +81,30 @@ class GeneTable(object) :
         allCDS = [x for x in gbRecord.features if x.type == "CDS"]
         for CDS in allCDS :
             gene = Gene(recordId = "GI:" + gbRecord.annotations["gi"],
-                        peptideSeq = ";".join(CDS.qualifiers.get("translation", [])),
+                        peptideSeq = ";".join(CDS.qualifiers.get("translation", ["None"])),
                         codingSeq = extractCodingSeqFast(CDS, gbRecord),
-                        translationTable = ";".join(CDS.qualifiers.get("transl_table", [])),
-                        gene = ";".join(CDS.qualifiers.get("gene", [])),
-                        product = ";".join(CDS.qualifiers.get("product", [])),
-                        proteinId = ";".join(CDS.qualifiers.get("protein_id", [])))
+                        translationTable = ";".join(CDS.qualifiers.get("transl_table", ["None"])),
+                        gene = ";".join(CDS.qualifiers.get("gene", ["None"])),
+                        product = ";".join(CDS.qualifiers.get("product", ["None"])),
+                        proteinId = ";".join(CDS.qualifiers.get("protein_id", ["None"])))
             self.genes.add(gene)
 
+### *** loadTable(self, path)
+
+    def loadTable(self, path) :
+        """Load gene information from a tabular file. The first line
+        contains the headers.
+
+        Args:
+            path (str): Path to the file
+        """
+        with open(path, "r") as fi :
+            headers = fi.readline().strip("\n").strip("#").split("\t")
+            for line in fi :
+                line = line.strip("\n").split()
+                data = dict(zip(headers, line))
+                self.genes.add(Gene(**data))
+            
 ### *** writeTable(self, path)
 
     def writeTable(self, path) :
