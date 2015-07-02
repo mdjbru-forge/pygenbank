@@ -137,3 +137,31 @@ class GeneTable(object) :
             for gene in self.genes :
                 geneDict = gene._asdict()
                 fo.write("\t".join([str(geneDict[x]) for x in headers]) + "\n")
+
+### *** extractUniquePeptides(self)
+
+    def extractUniquePeptides(self) :
+        """Extract the hash and sequences of unique peptides
+        """
+        uniquePep = []
+        uniqueHash = set([])
+        for g in self.genes :
+            assert g.peptideHash is not None
+            if g.peptideHash not in uniqueHash :
+                uniqueHash.add(g.peptideHash)
+                uniquePep.append((g.peptideHash, g.peptideSeq))
+        return uniquePep
+
+### *** writeUniquePeptides(self, path)
+
+    def writeUniquePeptides(self, path) :
+        """Write the unique peptides to a fasta file
+
+        Args:
+            path (str): Path to the fasta file
+        """
+        uniquePep = self.extractUniquePeptides()
+        with open(path, "w") as fo :
+            for pep in uniquePep :
+                fo.write(">" + pep[0] + "\n")
+                fo.write(pep[1] + "\n")
