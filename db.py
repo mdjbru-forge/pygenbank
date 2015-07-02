@@ -12,6 +12,117 @@ import warnings
 
 ### * Functions
 
+### ** seqDistance(seq1, seq2)
+
+def seqDistance(seq1, seq2) :
+    """Calculate the dissimilarity between two sequences.
+    Compare pairs of characters, and count number of mismatches and pairs 
+    with at least one X (also considered mismatch).
+    Note: matching gaps would be considered matches here! No gaps should be 
+    present in the sequences.
+
+    Args:
+        seq1 (str): First sequence
+        seq2 (str): Second sequence (same length as the first sequence)
+
+    Returns:
+        float: Dissimilarity (0-1) between the two sequences
+    """
+    mismatch = 0
+    assert len(seq1) == len(seq2)
+    for (x, y) in zip(seq1, seq2) :
+        if x != y or "x" in (x + y) or "X" in (x + y) :
+            mismatch += 1
+    return mismatch * 1. / len(seq1)
+
+### ** seqConsensus(seq1, seq2)
+
+def seqConsensus(seq1, seq2) :
+    """Determine the consensus between two sequences, replacing mismatches by X
+
+    Args:
+        seq1 (str): First sequence
+        seq2 (str): Second sequence (same length as the first sequence)
+    """
+    o = ""
+    for (x, y) in zip(seq1, seq2) :
+        if x == y :
+            o += x
+        else :
+            o += "X"
+    return o
+
+### ** mergeSequences(sequences)
+
+def mergeSequences(sequences, maxDistance) :
+    """Merge biological sequences of same length based on their similarity
+
+    Args:
+        sequences (iterable of str): List or set of strings
+        maxDistance (float): Maximum distance allowed to merge sequences
+
+    Returns:
+        dictionary: Mapping between the original sequences and the merged 
+          sequences
+    """
+    # https://en.wikipedia.org/wiki/Hierarchical_clustering
+    # www.ijetae.com/files/Volume2Issue5/IJETAE_0512_48.pdf (Rambabu 2012, IJETAE,
+    # "Clustering Orthologous Protein Sequences thru Python Based Program")
+    #
+    # Initialization
+    sequences = list(sequences)
+    clusters = set(sequences)
+    assert len(clusters) > 2
+    ancestors = dict()
+    descendants = dict()
+    for c in clusters :
+        ancestors[c] = c
+    for c in clusters :
+        descendants[c] = c
+    distances = dict()
+    for i in clusters :
+        for j in clusters :
+            if i != j and not distances.get(frozenset([i, j]), False) :
+                distances[frozenset([i, j])] = seqDistance(i, j)
+    # Make clusters
+    done = False
+    while (not done) :
+        sortedDistances = sorted(distances.items(), key = lambda x: x[1])
+        if sortedDistances[0][1] > maxDistance :
+            done = True
+        else :
+            # Merge
+            toMerge = [x[0] for x in sortedDistances if x[1] == sortedDistances[0][1]]
+            for pair in toMerge :
+                distances.pop(pair)
+                pair = list(pair)
+                try  :
+                    clusters.remove(descendants[pair[0]])
+                except :
+                    pass
+                try :
+                    clusters.remove(descendants[pair[1]])
+                except :
+                    pass
+                newCluster = seqConsensus(descendants[pair[0]], descendants[pair[1]])
+                clusters.add(newCluster)
+                for ancestor in ancestors[pair[0]] :
+                    descendants[ancestor] = newCluster
+                for ancestor in ancestors[pair[1]] :
+                    descendants[ancestor] = newCluster
+                descendants[newCluster] = newCluster
+                ancestors[newCluster] = ancestors.get(newCluster, [])
+                ancestors[newCluster] += list(pair)
+            # Refresh distances
+            for i in clusters :
+                for j in clusters :
+                    if i != j and not distances.get(frozenset([i, j]), False) :
+                        distances[frozenset([i, j])] = seqDistance(i, j)
+            if len(clusters) < 2 :
+                done = True
+    # Return
+    return dict(zip(sequences, [descendants[x] for x in sequences]))
+    
 ### ** extractCodingSeqFast(CDS, seqRecord)
 
 def extractCodingSeqFast(CDS, seqRecord) :
