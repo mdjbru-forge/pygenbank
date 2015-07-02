@@ -199,9 +199,9 @@ class GeneTable(ObjectTable) :
         ObjectTable.__init__(self)
         self.itemType = Gene
 
-### *** parseRecord(self, gbRecord)
+### *** parseGenBankRecord(self, gbRecord)
 
-    def parseRecord(self, gbRecord) :
+    def parseGenBankRecord(self, gbRecord) :
         """Parse the content of a GenBank record
 
         Args:
@@ -278,5 +278,5 @@ records = [SeqIO.read(x, "genbank") for x in paths[0:n]]
 g = GeneTable()
 r = RecordTable()
 
-[g.parseRecord(x) for x in records]
+[g.parseGenBankRecord(x) for x in records]
 [r.addGenBankRecord(x) for x in records]

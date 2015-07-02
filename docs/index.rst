@@ -22,6 +22,7 @@ Contents
 
    installation.rst
    genbank.rst
+   db.rst
    command-line-scripts.rst
    
 Indices and tables
