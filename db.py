@@ -52,14 +52,53 @@ def extractCodingSeqReliable(CDS, seqRecord) :
 
 ### * Named tuples
 
+# How to set default values for a named tuple:
+# http://stackoverflow.com/questions/11351032/named-tuple-and-optional-keyword-arguments
+
 Gene = collections.namedtuple("Gene", ["recordId", "peptideSeq", "codingSeq",
                                        "translationTable", "gene", "product",
                                        "proteinId", "function", "essentiality",
                                        "peptideHash"])
 Gene.__new__.__defaults__ = (None, ) * 10
-# http://stackoverflow.com/questions/11351032/named-tuple-and-optional-keyword-arguments
+
+Record = collections.namedtuple("Record", ["recordId", "strainName", "database",
+                                           "sequence", "organism", "description",
+                                           "references"])
+Record.__new__.__defaults__ = (None, ) * 7
+                                
 
 ### * Classes
+
+### ** RecordTable()
+
+class RecordTable(object) :
+    """Store a table containing record information"""
+
+### *** __init__(self)
+
+    def __init__(self) :
+        self.records = []
+
+### *** addGenBankRecord(self, gbRecord)
+
+    def addGenBankRecord(self, gbRecord) :
+        """Add a GenBank record data
+
+        Args:
+            gbRecord (Bio.SeqRecord.SeqRecord): GenBank Record object
+        """
+        d = dict()
+        d["recordId"] = "GI:" + gbRecord.annotations["gi"]
+        if gbRecord.description.endswith(", complete genome.") :
+            d["strainName"] = gbRecord.description[:-18]
+        else :
+            d["strainName"] = "NA"
+        d["database"] = "GenBank"
+        d["sequence"] = str(gbRecord.seq)
+        d["organism"] = gbRecord.annotations["organism"]
+        d["description"] = gbRecord.description
+        d["references"] = "<REFSEP>".join([str(x) for x in gbRecord.annotations["references"]]).replace("\n", "<FIELDSEP>")
+        self.records.append(Record(**d))
 
 ### ** GeneTable()
 
