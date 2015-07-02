@@ -73,6 +73,29 @@ def seqConsensus(seq1, seq2) :
             o += "X"
     return o
 
+### ** seqConsensusList(seqList)
+
+def seqConsensusList(seqList) :
+    """Determine the consensus between sequences, replacing mismatches by X
+
+    Args:
+        seqList (list of str): Sequences
+
+    Returns:
+        str: The consensus sequence
+
+    """
+    o = ""
+    assert len(seqList) > 0
+    length = len(seqList[0])
+    assert all([len(x) == length for x in seqList])
+    for i in range(length) :
+        chars = set([x[i] for x in seqList])
+        if len(chars) == 1 :
+            o += seqList[0][i]
+        else :
+            o += "X"
+    return o
 
 ### ** groupSets(setList)
 
@@ -143,6 +166,15 @@ def mergeSequences2(sequences, maxDistance) :
     while not stop :
         bestPairs = [x for x in distances.keys() if distances[x] == min(distances.values())]
         mergingGroups = groupSets(bestPairs)
+        for group in mergingGroups :
+            simpleNode = seqConsensusList(list(group))
+            for leaf in leaves :
+                if mapping[leaf] in group :
+                    mapping[leaf] = simpleNode
+            [simpleNodes.remove(x) for x in group]
+            simpleNodes.append(simpleNode)
+        distances = seqDistances(simpleNodes)
+        stop = (len(simpleNodes) < 2) or (min(distances.values()) > maxDistance)
     return mapping
         
 ### ** mergeSequences(sequences, maxDistance)
@@ -476,7 +508,7 @@ from Bio import SeqIO
 import os
 import hashlib
 
-rootDir = "/home/mabrunea/work/experiments/projects_running/2015-02-05_Ecoli-available-genomes/data/derived/010-fetch-from-genbank/genbank-records"
+rootDir = "/home/matthieu/work/experiments/projects_running/2015-02-05_Ecoli-available-genomes/data/derived/010-fetch-from-genbank/genbank-records"
 files = os.listdir(rootDir)
 paths = [os.path.join(rootDir, x) for x in files]
 n = 5
@@ -490,3 +522,5 @@ r = RecordTable()
 
 g.writeTable("totoGene")
 r.writeTable("totoRecord")
+
+d = [x.peptideSeq for x in g if x.peptideLength == "48"]
