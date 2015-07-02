@@ -57,10 +57,11 @@ def extractCodingSeqReliable(CDS, seqRecord) :
 # http://stackoverflow.com/questions/11351032/named-tuple-and-optional-keyword-arguments
 
 Gene = collections.namedtuple("Gene", ["recordId", "peptideSeq", "codingSeq",
+                                       "peptideLength", 
                                        "translationTable", "gene", "product",
                                        "proteinId", "function", "essentiality",
                                        "peptideHash"])
-Gene.__new__.__defaults__ = ("None", ) * 10
+Gene.__new__.__defaults__ = ("None", ) * 11
 
 Record = collections.namedtuple("Record", ["recordId", "strainName", "database",
                                            "sequence", "organism", "description",
@@ -211,6 +212,7 @@ class GeneTable(ObjectTable) :
         for CDS in allCDS :
             gene = self.itemType(recordId = "GI:" + gbRecord.annotations["gi"],
                         peptideSeq = ";".join(CDS.qualifiers.get("translation", ["None"])),
+                        peptideLength = str(len(";".join(CDS.qualifiers.get("translation", ["None"])))),
                         codingSeq = extractCodingSeqFast(CDS, gbRecord),
                         translationTable = ";".join(CDS.qualifiers.get("transl_table", ["None"])),
                         gene = ";".join(CDS.qualifiers.get("gene", ["None"])),
@@ -280,3 +282,6 @@ r = RecordTable()
 
 [g.parseGenBankRecord(x) for x in records]
 [r.addGenBankRecord(x) for x in records]
+
+g.writeTable("totoGene")
+r.writeTable("totoRecord")
