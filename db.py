@@ -35,6 +35,27 @@ def seqDistance(seq1, seq2) :
             mismatch += 1
     return mismatch * 1. / len(seq1)
 
+### ** seqDistances(seqList)
+
+def seqDistances(seqList) :
+    """Calculate the distances between all pairs of sequences in seqList
+
+    Args:
+        seqList (list of str): List of sequences
+
+    Returns:
+        dict: Mapping between frozen sets {s1, s2} and the distance between
+          s1 and s2, where {s1, s2} are all the possible sets of distinct
+          sequences
+
+    """
+    distances = dict()
+    for i in seqList :
+        for j in seqList :
+            if i != j and not distances.get(frozenset([i, j]), False) :
+                distances[frozenset([i, j])] = seqDistance(i, j)
+    return distances
+
 ### ** seqConsensus(seq1, seq2)
 
 def seqConsensus(seq1, seq2) :
@@ -52,9 +73,82 @@ def seqConsensus(seq1, seq2) :
             o += "X"
     return o
 
-### ** mergeSequences(sequences)
+
+### ** groupSets(setList)
+
+def groupSets(setList) :
+    """Merge sets into larger groups when elements are shared between them.
+
+    Args:
+        setList (list of set): List of sets
+
+    Returns:
+        list of set: List of sets with sets with shared elements merged
+    """
+    bag = set([frozenset(x) for x in setList])
+    groups = set()
+    while len(bag) > 0 :
+        previousSize = 0
+        element = set(bag.pop())
+        while previousSize != len(element) :
+            previousSize = len(element)
+            overlapping = [x for x in bag if len(element & x) > 0]
+            [bag.remove(x) for x in overlapping]
+            [element.update(x) for x in overlapping]
+        group = frozenset(element)
+        groups.add(group)
+    return list(groups)
+
+### ** mergeSequences2(sequences, maxDistance)
+
+def mergeSequences2(sequences, maxDistance) :
+    """We can imagine a dendrogram based on the distance between sequences.
+
+    Terminal nodes are the original sequences, and intermediates nodes are
+    consensus sequences of their children nodes (parent to the root, children
+    towards the leaves) where mismatches between children are replaced by "X".
+
+    One intermediate node can have more than two children.
+
+    We call "simplified sequences" a set of nodes so that every leaf has
+    exactly one of these nodes among its parents. At every instant, there is a
+    set of current "simplified nodes" and each leaf is assigned to one of them.
+
+    The starting state is with "simplified sequences" being the leaves.
+
+    The target state is with "simplified sequences" being only one or with
+    distance between them greater than the maxDistance value. We then return
+    the mapping between the leaves and the simplified nodes.
+
+    We proceed iteratively:
+    1. Check that there is more than one "simplified node"
+    2. Calculate all the distances between the current "simplified nodes"
+    3. Determine the minimum distance and check that it is not greater than the
+       threshold
+    4. Select all the pairs with this minimum distance
+    5. Make groups of connected pairs among those
+    6. For each independent group of connected pairs, merge them:
+         a. Determine the simplified sequence from those simplified sequences.
+            This is a newly determined node in the dendrogram.
+         b. Map the leaves which were mapped to the simplified sequences of the
+            group to this new node
+         c. Remove the simplified sequences of the group from the current set 
+            of simplified sequences and add the new simplified sequence
+    """
+    leaves = list(sequences)
+    simpleNodes = list(sequences)
+    mapping = dict(zip(leaves, leaves))
+    distances = seqDistances(simpleNodes)
+    stop = (len(simpleNodes) < 2) or (min(distances.values()) > maxDistance)
+    while not stop :
+        bestPairs = [x for x in distances.keys() if distances[x] == min(distances.values())]
+        mergingGroups = groupSets(bestPairs)
+    return mapping
+        
+### ** mergeSequences(sequences, maxDistance)
 
 def mergeSequences(sequences, maxDistance) :
+
     """Merge biological sequences of same length based on their similarity
 
     Args:
