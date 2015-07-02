@@ -54,8 +54,9 @@ def extractCodingSeqReliable(CDS, seqRecord) :
 
 Gene = collections.namedtuple("Gene", ["recordId", "peptideSeq", "codingSeq",
                                        "translationTable", "gene", "product",
-                                       "proteinId", "function", "essentiality"])
-Gene.__new__.__defaults__ = (None, ) * 9
+                                       "proteinId", "function", "essentiality",
+                                       "peptideHash"])
+Gene.__new__.__defaults__ = (None, ) * 10
 # http://stackoverflow.com/questions/11351032/named-tuple-and-optional-keyword-arguments
 
 ### * Classes
@@ -68,7 +69,7 @@ class GeneTable(object) :
 ### *** __init__(self)
 
     def __init__(self) :
-        self.genes = set([])
+        self.genes = []
 
 ### *** parseRecord(self, gbRecord)
 
@@ -87,8 +88,25 @@ class GeneTable(object) :
                         gene = ";".join(CDS.qualifiers.get("gene", ["None"])),
                         product = ";".join(CDS.qualifiers.get("product", ["None"])),
                         proteinId = ";".join(CDS.qualifiers.get("protein_id", ["None"])))
-            self.genes.add(gene)
+            self.genes.append(gene)
 
+### *** hashPeptides(self, hashConstructor)
+
+    def hashPeptides(self, hashConstructor) :
+        """Calculate hash value for each gene peptide sequence
+
+        Args:
+            hashConstructor (function): Hash algorithm to be used (from the 
+              ``hashlib`` module)
+        """
+        for (i, g) in enumerate(self.genes) :
+            h = hashConstructor()
+            h.update(g.peptideSeq)
+            hStr = h.hexdigest()
+            geneData = g._asdict()
+            geneData["peptideHash"] = hStr
+            self.genes[i] = Gene(**geneData)
+            
 ### *** loadTable(self, path)
 
     def loadTable(self, path) :
