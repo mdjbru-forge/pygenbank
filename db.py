@@ -7,6 +7,7 @@
 ### ** Import
 
 import collections
+import itertools
 import warnings
 
 ### * Functions
@@ -59,25 +60,112 @@ Gene = collections.namedtuple("Gene", ["recordId", "peptideSeq", "codingSeq",
                                        "translationTable", "gene", "product",
                                        "proteinId", "function", "essentiality",
                                        "peptideHash"])
-Gene.__new__.__defaults__ = (None, ) * 10
+Gene.__new__.__defaults__ = ("None", ) * 10
 
 Record = collections.namedtuple("Record", ["recordId", "strainName", "database",
                                            "sequence", "organism", "description",
                                            "references"])
-Record.__new__.__defaults__ = (None, ) * 7
+Record.__new__.__defaults__ = ("None", ) * 7
                                 
 
 ### * Classes
 
+### ** ObjectTable()
+
+class ObjectTable(object) :
+    """Parent class for more specific table classes"""
+
+### *** __init__(self)
+
+    def __init__(self) :
+        self.items = []
+        self.itemType = None
+
+### *** __len__(self)
+
+    def __len__(self) :
+        return len(self.items)
+
+### *** __getitem__(self, key)
+
+    def __getitem__(self, key) :
+        return self.items[key]
+
+### *** __repr__(self)
+
+    def __repr__(self) :
+        return ("<ObjectTable (" + str(len(self)) + " items) for " +
+                self.itemType.__doc__ + ">")
+
+### *** _oneCol(self, colName)
+
+    def _oneCol(self, colName) :
+        """Return an iterator on the "column" with name colName
+
+        Args:
+            colName (str): One of the named attributes of the item type
+
+        Returns:
+            iterator
+        """
+        for x in self :
+            yield x.__getattribute__(colName)
+
+### *** col(self, *colNames)
+
+    def col(self, *colNames) :
+        """Return an iterator on the "columns" with names colNames
+
+        Args:
+            colNames (str): One of the named attributes of the item type
+
+        Returns:
+            iterator
+        """
+        # http://stackoverflow.com/questions/243865/how-do-i-merge-two-python-iterators
+        return itertools.izip(*[self._oneCol(x) for x in colNames])
+
+### *** loadTable(self, path)
+
+    def loadTable(self, path) :
+        """Load gene information from a tabular file. The first line
+        contains the headers.
+
+        Args:
+            path (str): Path to the file
+        """
+        with open(path, "r") as fi :
+            headers = fi.readline().strip("\n").strip("#").split("\t")
+            for line in fi :
+                line = line.strip("\n").split()
+                data = dict(zip(headers, line))
+                self.items.append(self.itemType(**data))
+            
+### *** writeTable(self, path)
+
+    def writeTable(self, path) :
+        """Write gene information to a tabular file
+
+        Args:
+            path (str): Path to the file
+        """
+        with open(path, "w") as fo :
+            headers = list(self.itemType()._asdict().keys())
+            fo.write("#" + "\t".join(headers) + "\n")
+            for item in self.items :
+                itemDict = item._asdict()
+                fo.write("\t".join([str(itemDict[x]) for x in headers]) + "\n")
+        
 ### ** RecordTable()
 
-class RecordTable(object) :
+class RecordTable(ObjectTable) :
     """Store a table containing record information"""
 
 ### *** __init__(self)
 
     def __init__(self) :
-        self.records = []
+        ObjectTable.__init__(self)
+        self.itemType = Record
 
 ### *** addGenBankRecord(self, gbRecord)
 
@@ -98,17 +186,18 @@ class RecordTable(object) :
         d["organism"] = gbRecord.annotations["organism"]
         d["description"] = gbRecord.description
         d["references"] = "<REFSEP>".join([str(x) for x in gbRecord.annotations["references"]]).replace("\n", "<FIELDSEP>")
-        self.records.append(Record(**d))
+        self.items.append(Record(**d))
 
 ### ** GeneTable()
 
-class GeneTable(object) :
+class GeneTable(ObjectTable) :
     """Store a table containing bacterial gene information"""
 
 ### *** __init__(self)
 
     def __init__(self) :
-        self.genes = []
+        ObjectTable.__init__(self)
+        self.itemType = Gene
 
 ### *** parseRecord(self, gbRecord)
 
@@ -120,14 +209,14 @@ class GeneTable(object) :
         """
         allCDS = [x for x in gbRecord.features if x.type == "CDS"]
         for CDS in allCDS :
-            gene = Gene(recordId = "GI:" + gbRecord.annotations["gi"],
+            gene = self.itemType(recordId = "GI:" + gbRecord.annotations["gi"],
                         peptideSeq = ";".join(CDS.qualifiers.get("translation", ["None"])),
                         codingSeq = extractCodingSeqFast(CDS, gbRecord),
                         translationTable = ";".join(CDS.qualifiers.get("transl_table", ["None"])),
                         gene = ";".join(CDS.qualifiers.get("gene", ["None"])),
                         product = ";".join(CDS.qualifiers.get("product", ["None"])),
                         proteinId = ";".join(CDS.qualifiers.get("protein_id", ["None"])))
-            self.genes.append(gene)
+            self.items.append(gene)
 
 ### *** hashPeptides(self, hashConstructor)
 
@@ -138,45 +227,14 @@ class GeneTable(object) :
             hashConstructor (function): Hash algorithm to be used (from the 
               ``hashlib`` module)
         """
-        for (i, g) in enumerate(self.genes) :
+        for (i, g) in enumerate(self.items) :
             h = hashConstructor()
             h.update(g.peptideSeq)
             hStr = h.hexdigest()
             geneData = g._asdict()
             geneData["peptideHash"] = hStr
-            self.genes[i] = Gene(**geneData)
+            self.items[i] = self.itemType(**geneData)
             
-### *** loadTable(self, path)
-
-    def loadTable(self, path) :
-        """Load gene information from a tabular file. The first line
-        contains the headers.
-
-        Args:
-            path (str): Path to the file
-        """
-        with open(path, "r") as fi :
-            headers = fi.readline().strip("\n").strip("#").split("\t")
-            for line in fi :
-                line = line.strip("\n").split()
-                data = dict(zip(headers, line))
-                self.genes.add(Gene(**data))
-            
-### *** writeTable(self, path)
-
-    def writeTable(self, path) :
-        """Write gene information to a tabular file
-
-        Args:
-            path (str): Path to the file
-        """
-        with open(path, "w") as fo :
-            headers = list(Gene()._asdict().keys())
-            fo.write("#" + "\t".join(headers) + "\n")
-            for gene in self.genes :
-                geneDict = gene._asdict()
-                fo.write("\t".join([str(geneDict[x]) for x in headers]) + "\n")
-
 ### *** extractUniquePeptides(self)
 
     def extractUniquePeptides(self) :
@@ -184,7 +242,7 @@ class GeneTable(object) :
         """
         uniquePep = []
         uniqueHash = set([])
-        for g in self.genes :
+        for g in self.items :
             assert g.peptideHash is not None
             if g.peptideHash not in uniqueHash :
                 uniqueHash.add(g.peptideHash)
@@ -204,3 +262,21 @@ class GeneTable(object) :
             for pep in uniquePep :
                 fo.write(">" + pep[0] + "\n")
                 fo.write(pep[1] + "\n")
+
+### * Test
+
+from Bio import SeqIO
+import os
+import hashlib
+
+rootDir = "/home/mabrunea/work/experiments/projects_running/2015-02-05_Ecoli-available-genomes/data/derived/010-fetch-from-genbank/genbank-records"
+files = os.listdir(rootDir)
+paths = [os.path.join(rootDir, x) for x in files]
+n = 5
+records = [SeqIO.read(x, "genbank") for x in paths[0:n]]
+
+g = GeneTable()
+r = RecordTable()
+
+[g.parseRecord(x) for x in records]
+[r.addGenBankRecord(x) for x in records]
