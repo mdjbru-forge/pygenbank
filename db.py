@@ -6,6 +6,7 @@
 
 ### ** Import
 
+import sys
 import collections
 import itertools
 import warnings
@@ -122,9 +123,9 @@ def groupSets(setList) :
         groups.add(group)
     return list(groups)
 
-### ** mergeSequences2(sequences, maxDistance)
+### ** mergeSequences(sequences, maxDistance)
 
-def mergeSequences2(sequences, maxDistance) :
+def mergeSequences(sequences, maxDistance) :
     """We can imagine a dendrogram based on the distance between sequences.
 
     Terminal nodes are the original sequences, and intermediates nodes are
@@ -157,6 +158,15 @@ def mergeSequences2(sequences, maxDistance) :
             group to this new node
          c. Remove the simplified sequences of the group from the current set 
             of simplified sequences and add the new simplified sequence
+
+    Args:
+        sequences (iterable of str): Original sequences
+        maxDistance (float): Maximum dissimilarity between sequences to be
+          merged
+
+    Returns:
+        dict: Dictionary mapping (original sequence, simplified sequence)
+    
     """
     leaves = list(sequences)
     simpleNodes = list(sequences)
@@ -177,9 +187,9 @@ def mergeSequences2(sequences, maxDistance) :
         stop = (len(simpleNodes) < 2) or (min(distances.values()) > maxDistance)
     return mapping
         
-### ** mergeSequences(sequences, maxDistance)
+### ** mergeSequencesOld(sequences, maxDistance)
 
-def mergeSequences(sequences, maxDistance) :
+def mergeSequencesOld(sequences, maxDistance) :
 
     """Merge biological sequences of same length based on their similarity
 
@@ -436,6 +446,8 @@ class GeneTable(ObjectTable) :
     def __init__(self) :
         ObjectTable.__init__(self)
         self.itemType = Gene
+        self.stderr = sys.stderr
+        self.nParsedRecords = 0
 
 ### *** parseGenBankRecord(self, gbRecord)
 
@@ -445,6 +457,9 @@ class GeneTable(ObjectTable) :
         Args:
             gbRecord (Bio.SeqRecord.SeqRecord): GenBank Record object
         """
+        self.nParsedRecords += 1
+        msg = "Parsing GenBank record " + str(self.nParsedRecords)
+        self.stderr.write(msg + "\n")
         allCDS = [x for x in gbRecord.features if x.type == "CDS"]
         for CDS in allCDS :
             gene = self.itemType(recordId = "GI:" + gbRecord.annotations["gi"],
@@ -502,25 +517,55 @@ class GeneTable(ObjectTable) :
                 fo.write(">" + pep[0] + "\n")
                 fo.write(pep[1] + "\n")
 
+### *** extractSimplifiedPeptides(self, maxDissimilarity) :
+
+    def extractSimplifiedPeptides(self, maxDissimilarity) :
+        """From the unique peptide sequences, produce simplified sequences which 
+        result from merging similar sequences together. Only sequences of same 
+        length can be merged, based on their dissimilarity.
+
+        Args:
+            maxDissimilarity (float): Comprised between 0 and 1, maximum 
+              dissimilarity for merging
+
+        Returns:
+            dict: Dictionary mapping (original peptide, simplified peptide)
+
+        """
+        originalSeqs = set([x.peptideSeq for x in self.items])
+        originalSeqsByLen = dict()
+        for x in originalSeqs :
+            l = len(x)
+            originalSeqsByLen[l] = originalSeqsByLen.get(l, [])
+            originalSeqsByLen[l].append(x)
+        mapping = dict()
+        for seqs in originalSeqsByLen.values() :
+            print("Processing length " + str(len(seqs[0])) +
+                  "(" + str(len(seqs)) + " sequences)")
+            mapping.update(mergeSequences(seqs, maxDissimilarity))
+        return mapping
+            
 ### * Test
 
 from Bio import SeqIO
 import os
 import hashlib
 
-rootDir = "/home/matthieu/work/experiments/projects_running/2015-02-05_Ecoli-available-genomes/data/derived/010-fetch-from-genbank/genbank-records"
+rootDir = "/home/mabrunea/work/experiments/projects_running/2015-02-05_Ecoli-available-genomes/data/derived/010-fetch-from-genbank/genbank-records"
 files = os.listdir(rootDir)
 paths = [os.path.join(rootDir, x) for x in files]
-n = 5
-records = [SeqIO.read(x, "genbank") for x in paths[0:n]]
+n = 50
+#records = [SeqIO.read(x, "genbank") for x in paths[0:n]]
+#records = [SeqIO.read(x, "genbank") for x in paths]
 
 g = GeneTable()
-r = RecordTable()
+#r = RecordTable()
 
-[g.parseGenBankRecord(x) for x in records]
-[r.addGenBankRecord(x) for x in records]
+[g.parseGenBankRecord(SeqIO.read(x, "genbank")) for x in paths[0:n]]
+#[r.addGenBankRecord(x) for x in records]
 
-g.writeTable("totoGene")
-r.writeTable("totoRecord")
+#g.writeTable("totoGene")
+#r.writeTable("totoRecord")
 
-d = [x.peptideSeq for x in g if x.peptideLength == "48"]
+#d = [x.peptideSeq for x in g if x.peptideLength == "48"]
+e = g.extractSimplifiedPeptides(0.05)
