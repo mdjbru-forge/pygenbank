@@ -36,13 +36,15 @@ def seqDistance(seq1, seq2) :
             mismatch += 1
     return mismatch * 1. / len(seq1)
 
-### ** seqDistances(seqList)
+### ** seqDistances(seqList, distances = None)
 
-def seqDistances(seqList) :
+def seqDistances(seqList, distances = None) :
     """Calculate the distances between all pairs of sequences in seqList
 
     Args:
         seqList (list of str): List of sequences
+        distances (dict): A previous output from :func:`seqDistances`, from
+          which precalculated distances can be taken
 
     Returns:
         dict: Mapping between frozen sets {s1, s2} and the distance between
@@ -50,11 +52,18 @@ def seqDistances(seqList) :
           sequences
 
     """
+    distances_old = distances
+    if distances_old is None :
+        distances_old = dict()
     distances = dict()
     for i in seqList :
         for j in seqList :
-            if i != j and not distances.get(frozenset([i, j]), False) :
-                distances[frozenset([i, j])] = seqDistance(i, j)
+            if i != j :
+                if not distances.get(frozenset([i, j]), False) :
+                    if distances_old.get(frozenset([i, j]), False) :
+                        distances[frozenset([i, j])] = distances_old[frozenset([i, j])]
+                    else :
+                        distances[frozenset([i, j])] = seqDistance(i, j)
     return distances
 
 ### ** seqConsensus(seq1, seq2)
@@ -172,9 +181,10 @@ def mergeSequences(sequences, maxDistance) :
     simpleNodes = list(sequences)
     mapping = dict(zip(leaves, leaves))
     distances = seqDistances(simpleNodes)
-    stop = (len(simpleNodes) < 2) or (min(distances.values()) > maxDistance)
+    minDistance = min(distances.values())
+    stop = (len(simpleNodes) < 2) or (minDistance > maxDistance)
     while not stop :
-        bestPairs = [x for x in distances.keys() if distances[x] == min(distances.values())]
+        bestPairs = [x for x in distances.keys() if distances[x] == minDistance]
         mergingGroups = groupSets(bestPairs)
         for group in mergingGroups :
             simpleNode = seqConsensusList(list(group))
@@ -183,8 +193,9 @@ def mergeSequences(sequences, maxDistance) :
                     mapping[leaf] = simpleNode
             [simpleNodes.remove(x) for x in group]
             simpleNodes.append(simpleNode)
-        distances = seqDistances(simpleNodes)
-        stop = (len(simpleNodes) < 2) or (min(distances.values()) > maxDistance)
+        distances = seqDistances(simpleNodes, distances)
+        minDistance = min(distances.values())
+        stop = (len(simpleNodes) < 2) or (minDistance > maxDistance)
     return mapping
         
 ### ** mergeSequencesOld(sequences, maxDistance)
@@ -554,14 +565,14 @@ import hashlib
 rootDir = "/home/mabrunea/work/experiments/projects_running/2015-02-05_Ecoli-available-genomes/data/derived/010-fetch-from-genbank/genbank-records"
 files = os.listdir(rootDir)
 paths = [os.path.join(rootDir, x) for x in files]
-n = 50
+#n = 50
 #records = [SeqIO.read(x, "genbank") for x in paths[0:n]]
 #records = [SeqIO.read(x, "genbank") for x in paths]
 
 g = GeneTable()
 #r = RecordTable()
 
-[g.parseGenBankRecord(SeqIO.read(x, "genbank")) for x in paths[0:n]]
+[g.parseGenBankRecord(SeqIO.read(x, "genbank")) for x in paths[0:120]]
 #[r.addGenBankRecord(x) for x in records]
 
 #g.writeTable("totoGene")
