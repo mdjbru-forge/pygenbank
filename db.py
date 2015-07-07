@@ -38,23 +38,27 @@ def seqDistance(seq1, seq2) :
 
 ### ** seqDistances(seqList, distances = None)
 
-def seqDistances(seqList, distances = None) :
+def seqDistances(seqList, distances = None, minDistance = None) :
     """Calculate the distances between all pairs of sequences in seqList
 
     Args:
         seqList (list of str): List of sequences
         distances (dict): A previous output from :func:`seqDistances`, from
           which precalculated distances can be taken
+        minDistance (float): Previous minimum distance valuex
 
     Returns:
-        dict: Mapping between frozen sets {s1, s2} and the distance between
-          s1 and s2, where {s1, s2} are all the possible sets of distinct
-          sequences
+        tuple (dict, float): Dictionary mapping frozen sets {s1, s2} to the 
+          distance between s1 and s2, where {s1, s2} are all the possible sets 
+          of distinct sequences; minimum distance observed, 1 if no 
+          pairs of sequences.
 
     """
     distances_old = distances
     if distances_old is None :
         distances_old = dict()
+    if minDistance is None :
+        minDistance = 1
     distances = dict()
     for i in seqList :
         for j in seqList :
@@ -63,8 +67,11 @@ def seqDistances(seqList, distances = None) :
                     if distances_old.get(frozenset([i, j]), False) :
                         distances[frozenset([i, j])] = distances_old[frozenset([i, j])]
                     else :
-                        distances[frozenset([i, j])] = seqDistance(i, j)
-    return distances
+                        d = seqDistance(i, j)
+                        distances[frozenset([i, j])] = d
+                        if d < minDistance :
+                            minDistance = d
+    return (distances, minDistance)
 
 ### ** seqConsensus(seq1, seq2)
 
@@ -180,8 +187,7 @@ def mergeSequences(sequences, maxDistance) :
     leaves = list(sequences)
     simpleNodes = list(sequences)
     mapping = dict(zip(leaves, leaves))
-    distances = seqDistances(simpleNodes)
-    minDistance = min(distances.values())
+    (distances, minDistance) = seqDistances(simpleNodes)
     stop = (len(simpleNodes) < 2) or (minDistance > maxDistance)
     while not stop :
         bestPairs = [x for x in distances.keys() if distances[x] == minDistance]
@@ -193,8 +199,7 @@ def mergeSequences(sequences, maxDistance) :
                     mapping[leaf] = simpleNode
             [simpleNodes.remove(x) for x in group]
             simpleNodes.append(simpleNode)
-        distances = seqDistances(simpleNodes, distances)
-        minDistance = min(distances.values())
+        (distances, minDistance) = seqDistances(simpleNodes, distances)
         stop = (len(simpleNodes) < 2) or (minDistance > maxDistance)
     return mapping
         
@@ -572,7 +577,7 @@ paths = [os.path.join(rootDir, x) for x in files]
 g = GeneTable()
 #r = RecordTable()
 
-[g.parseGenBankRecord(SeqIO.read(x, "genbank")) for x in paths[0:120]]
+[g.parseGenBankRecord(SeqIO.read(x, "genbank")) for x in paths]
 #[r.addGenBankRecord(x) for x in records]
 
 #g.writeTable("totoGene")
