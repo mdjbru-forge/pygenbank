@@ -10,6 +10,8 @@ import sys
 import collections
 import itertools
 import warnings
+import hashlib
+from Bio import SeqIO
 
 ### * Functions
 
@@ -420,7 +422,7 @@ class ObjectTable(object) :
                 itemDict = item._asdict()
                 fo.write("\t".join([str(itemDict[x]) for x in headers]) + "\n")
         
-### ** RecordTable()
+### ** RecordTable() ObjectTable
 
 class RecordTable(ObjectTable) :
     """Store a table containing record information"""
@@ -452,7 +454,7 @@ class RecordTable(ObjectTable) :
         d["references"] = "<REFSEP>".join([str(x) for x in gbRecord.annotations["references"]]).replace("\n", "<FIELDSEP>")
         self.items.append(Record(**d))
 
-### ** GeneTable()
+### ** GeneTable() ObjectTable
 
 class GeneTable(ObjectTable) :
     """Store a table containing bacterial gene information"""
@@ -464,6 +466,7 @@ class GeneTable(ObjectTable) :
         self.itemType = Gene
         self.stderr = sys.stderr
         self.nParsedRecords = 0
+        self.simplifiedSeqs = None
 
 ### *** parseGenBankRecord(self, gbRecord)
 
@@ -471,22 +474,31 @@ class GeneTable(ObjectTable) :
         """Parse the content of a GenBank record
 
         Args:
-            gbRecord (Bio.SeqRecord.SeqRecord): GenBank Record object
+            gbRecord (Bio.SeqRecord.SeqRecord): GenBank Record object. It can 
+              also be a list of GenBank Record objects, a path to a GenBank
+              record or a list of paths to GenBank records.
         """
-        self.nParsedRecords += 1
-        msg = "Parsing GenBank record " + str(self.nParsedRecords)
-        self.stderr.write(msg + "\n")
-        allCDS = [x for x in gbRecord.features if x.type == "CDS"]
-        for CDS in allCDS :
-            gene = self.itemType(recordId = "GI:" + gbRecord.annotations["gi"],
-                        peptideSeq = ";".join(CDS.qualifiers.get("translation", ["None"])),
-                        peptideLength = str(len(";".join(CDS.qualifiers.get("translation", ["None"])))),
-                        codingSeq = extractCodingSeqFast(CDS, gbRecord),
-                        translationTable = ";".join(CDS.qualifiers.get("transl_table", ["None"])),
-                        gene = ";".join(CDS.qualifiers.get("gene", ["None"])),
-                        product = ";".join(CDS.qualifiers.get("product", ["None"])),
-                        proteinId = ";".join(CDS.qualifiers.get("protein_id", ["None"])))
-            self.items.append(gene)
+        # TODO: Set simplifiedSeqs to None when new sequences are parsed?
+        if isinstance(gbRecord, list) :
+            for r in gbRecord :
+                self.parseGenBankRecord(r)
+        else :
+            self.nParsedRecords += 1
+            msg = "Parsing GenBank record " + str(self.nParsedRecords)
+            self.stderr.write(msg + "\n")
+            if isinstance(gbRecord, str) :
+                gbRecord = SeqIO.read(gbRecord, "genbank")
+            allCDS = [x for x in gbRecord.features if x.type == "CDS"]
+            for CDS in allCDS :
+                gene = self.itemType(recordId = "GI:" + gbRecord.annotations["gi"],
+                                     peptideSeq = ";".join(CDS.qualifiers.get("translation", ["None"])),
+                                     peptideLength = str(len(";".join(CDS.qualifiers.get("translation", ["None"])))),
+                                     codingSeq = extractCodingSeqFast(CDS, gbRecord),
+                                     translationTable = ";".join(CDS.qualifiers.get("transl_table", ["None"])),
+                                     gene = ";".join(CDS.qualifiers.get("gene", ["None"])),
+                                     product = ";".join(CDS.qualifiers.get("product", ["None"])),
+                                     proteinId = ";".join(CDS.qualifiers.get("protein_id", ["None"])))
+                self.items.append(gene)
 
 ### *** hashPeptides(self, hashConstructor)
 
@@ -540,6 +552,9 @@ class GeneTable(ObjectTable) :
         result from merging similar sequences together. Only sequences of same 
         length can be merged, based on their dissimilarity.
 
+        This function returns the mapping and sets the ``simplifiedSeqs`` 
+        attribute.
+
         Args:
             maxDissimilarity (float): Comprised between 0 and 1, maximum 
               dissimilarity for merging
@@ -559,29 +574,32 @@ class GeneTable(ObjectTable) :
             print("Processing length " + str(len(seqs[0])) +
                   "(" + str(len(seqs)) + " sequences)")
             mapping.update(mergeSequences(seqs, maxDissimilarity))
+        self.simplifiedSeqs = mapping
         return mapping
             
-### * Test
+### *** writeSimplifiedPeptides(self, path)
 
-from Bio import SeqIO
-import os
-import hashlib
+    def writeSimplifiedPeptides(self, path) :
+        """Write the simplified peptides to a fasta file (i.e. consensus 
+        sequences with X at polymorphic positions, obtained by merging 
+        sequences of equal length if not too dissimilar). The simplified 
+        sequences must have been produced by the
+        :func:`extractSimplifiedPeptides` beforehand.
 
-rootDir = "/home/mabrunea/work/experiments/projects_running/2015-02-05_Ecoli-available-genomes/data/derived/010-fetch-from-genbank/genbank-records"
-files = os.listdir(rootDir)
-paths = [os.path.join(rootDir, x) for x in files]
-#n = 50
-#records = [SeqIO.read(x, "genbank") for x in paths[0:n]]
-#records = [SeqIO.read(x, "genbank") for x in paths]
+        This is a good input for a blastp run.
 
-g = GeneTable()
-#r = RecordTable()
+        Args:
+            path (str): Path to the fasta file
 
-[g.parseGenBankRecord(SeqIO.read(x, "genbank")) for x in paths]
-#[r.addGenBankRecord(x) for x in records]
+        """
+        if self.simplifiedSeqs is None :
+            raise Exception("The method to simplify sequences must be called "
+                            "first (extractSimplifiedPeptides)")
+        with open(path, "w") as fo :
+            for pep in set(self.simplifiedSeqs.values()) :
+                h = hashlib.md5()
+                h.update(pep)
+                hStr = h.hexdigest()
+                fo.write(">" + hStr + "\n")
+                fo.write(pep + "\n")
 
-#g.writeTable("totoGene")
-#r.writeTable("totoRecord")
-
-#d = [x.peptideSeq for x in g if x.peptideLength == "48"]
-e = g.extractSimplifiedPeptides(0.05)
