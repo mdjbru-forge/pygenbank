@@ -5,3 +5,4 @@ cover/
 *.pyc
 tests/nosetests.html
 .coverage
+toto*
