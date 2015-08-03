@@ -1,5 +1,3 @@
-|docs| |build status| |coverage|
-
 Description
 ===========
 
