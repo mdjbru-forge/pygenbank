@@ -6,7 +6,7 @@
 from setuptools import setup
 
 setup(name = "pygenbank",
-      version = "0.0.1",
+      version = "0.0.2",
       py_modules = ["genbank"],
       entry_points = {
           "console_scripts" : [

@@ -61,7 +61,7 @@ clean:
 ### ** install
 install:
 	rm -fr $(PYTHON_MODULE_EGG)
-	pip install -e .
+	pip install --user .
 
 ### ** uninstall
 uninstall:

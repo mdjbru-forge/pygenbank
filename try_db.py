@@ -51,4 +51,3 @@ script refineAlignments
   
 - SNP
   + call SNPs
-  
