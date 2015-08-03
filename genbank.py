@@ -703,6 +703,197 @@ def _CDSinfo(CDS, outfmt, fmtdictCDS = None,
 # pygenbank-search --idlist myId.list --download
 # pygenbank-search --idlist myId.list --download --outputDir ./GenBank
 
+### *** main_parser
+
+def main_parser() :
+    """Prepare the parser
+
+    Returns:
+        ArgumentParser: An argument parser
+
+    """
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(help = "")
+    # Search
+    sp_search = subparsers.add_parser("search",
+                                      help = "Search GenBank",
+                                      description = SCRIPT_DESCRIPTION_SEARCH)
+    sp_search.add_argument("-c", "--count", action = "store_true",
+                           help = "Just return the number of records, no fetch")
+    # Required named arguments (http://stackoverflow.com/questions/24180527/argparse-required-arguments-listed-under-optional-arguments)
+    required = sp_search.add_argument_group("required named arguments")
+    # --email
+    required.add_argument("-e", "--email", type = str,
+                        help = "User's email (required by Entrez)")
+    # --listId
+    required.add_argument("-l", "--listId", type = str,
+                          help = "File containing one GenBank identifier per "
+                          "line. Use - for reading from stdin. "
+                          "Exactly one of --listId or "
+                          "--query must be specified, but not both.")
+    # --query
+    required.add_argument("-q", "--query", type = str,
+                          help = "Query string for GenBank search. "
+                          "Exactly one of --listId or "
+                          "--query must be specified, but not both.",
+                          metavar = "SEARCH_TERM")
+    # Download options
+    download = sp_search.add_argument_group("download-related options")
+    # --retmax
+    download.add_argument("-r", "--retmax", type = int, default = 0,
+                        help = "Maximum number of entries to retrieve from "
+                        "GenBank, comprised between 1 and 10000. Use 0 for "
+                        "unlimited number of returned entries. (default: 0)")
+    # --download
+    download.add_argument("-d", "--download", action = "store_true",
+                        help = "Download the full GenBank records")
+    # --forceDownload
+    download.add_argument("-f", "--forceDownload", action = "store_true",
+                        help = "Download record even if file already exists "
+                        "(implies --download)")
+    # --fullWGS
+    download.add_argument("--fullWGS", action = "store_true",
+                        help = "Also download full WGS sequence data when "
+                        "WGS trace reference is present in a GenBank record "
+                        "(only works if the original GenBank record is to be "
+                        "downloaded too or if --forceDownload is used)")
+    # --outputDir
+    download.add_argument("-o", "--outputDir", type = str, default = ".",
+                        help = "Destination folder for downloaded records "
+                        "(default: current directory)")
+    # --batchSize
+    download.add_argument("-b", "--batchSize", type = int, default = 5,
+                        help = "Batch size for full record retrieval "
+                        "(default: 5)")
+    # --delay
+    download.add_argument("--delay", type = int, default = 15,
+                        help = "Delay in seconds between successive batch "
+                        "retrieval of the full records (default: 15)")
+    # Action
+    sp_search.set_defaults(action = "search")
+    # Extract CDS
+    sp_extractCDS = subparsers.add_parser("extractCDS",
+                                          help = "Extract CDS",
+                                          description = SCRIPT_DESCRIPTION_EXTRACT_CDS)
+        # input files
+    sp_extractCDS.add_argument("genbank_records", type = str, nargs = "+",
+                               help = "Filename(s) for GenBank record(s)")
+    # --hash
+    sp_extractCDS.add_argument("--hash", metavar = "HASH_ALGORITHM",
+                        choices = ["md5", "sha1", "sha224", "sha256", "sha384",
+                                   "sha512"],
+                        default = "md5",
+                        help = "Hash algorithm to use for unique sequence signature "
+                               "(default md5)")
+    # --unique    
+    sp_extractCDS.add_argument("-u", "--unique", metavar = "UNIQUE_FASTA",
+                        type = str, default = None,
+                        help = "Filename for unique fasta amino acid sequences")
+    # --outfmt
+    sp_extractCDS.add_argument("-o", "--outfmt", metavar = "FORMAT",
+                        type = str, default = "dscrp,gi,loc,hash,prot",
+                        help = "Comma-separated list of output column "
+                        "identifiers for summaries. Allowed identifiers are: "
+                        "id, name, dscrp, acc, date, gi, orgn, src (record "
+                        "attributes) and loc, prot, nuc, prod, gene, hash "
+                        "(CDS attributes). Default is dscrp,gi,loc,hash,prot.")
+    # --count
+    sp_extractCDS.add_argument("-c", "--count", action = "store_true",
+                        help = "Count the number of CDS per record instead of "
+                        " producing CDS summaries. Cannot be used at the same "
+                        "time as --unique.")
+    # --verbose
+    sp_extractCDS.add_argument("-v", "--verbose", action = "store_true",
+                        help = "Send verbose messages to stderr during execution")
+    # Action
+    sp_extractCDS.set_defaults(action = "extractCDS")
+    return parser
+
+### *** main
+
+def main(args = None, stdout = None, stderr = None) :
+    """Main entry point
+
+    Args:
+        args (namespace): Namespace with script arguments, parse the command 
+          line arguments if None
+        stdout (file): Writable stdout stream (if None, use `sys.stdout`)
+        stderr (file): Writable stderr stream (if None, use `sys.stderr`)
+
+    """
+    if args is None :
+        parser = main_parser()
+        args = parser.parse_args()
+    if stdout is None :
+        stdout = sys.stdout
+    if stderr is None :
+        stderr = sys.stderr
+    dispatch = dict()
+    dispatch["search"] = main_search
+    dispatch["extractCDS"] = main_extractCDS
+    dispatch[args.action](args, stdout, stderr)
+
+### *** main_search
+
+def main_search(args, stdout, stderr) :
+    args = _processArgsToLogic_search(args, stdout, stderr)
+    listId = None
+    # Genbank search
+    if args.actionFlags.get("DoGenbankSearch", False) :
+        mySearch = search(term = args.query, retmax = args.retmax)
+        if args.count :
+            stdout.write(mySearch["QueryTranslation"] + "\t" + str(mySearch["Count"]) + "\n")
+            sys.exit(0)
+        myDocSums = getDocSum(mySearch)
+        writeDocSums(myDocSums, stdout)
+        listId = [x["Gi"] for x in myDocSums]
+    # Get docsums for a list of identifiers
+    if args.actionFlags.get("DoGetList", False) :
+        if args.count :
+            stderr.write("-l and -c cannot be used at the same time\n")
+            sys.exit(1)
+        listId = _fileLinesToList(args.listId)
+        myDocSums = getDocSumFromId(listId)
+        writeDocSums(myDocSums, stdout)
+    # Download records
+    if args.download and not args.count :
+        assert listId is not None
+        downloadRecords(idList = listId, destDir = args.outputDir,
+                               batchSize = args.batchSize, delay = args.delay,
+                               forceDownload = args.forceDownload,
+                               downloadFullWGS = args.fullWGS)
+
+### *** main_extractCDS
+
+def main_extractCDS(args, stdout, stderr) :
+    args = _processArgsToLogic_extract_CDS(args, stdout, stderr,
+                                           GB_RECORD_FMTDICT, GB_CDS_FMTDICT)
+    # Go through the input files
+    uniqueSeq = dict()
+    i_file = 0
+    for fi in args.genbank_records :
+        i_file += 1
+        if args.verbose :
+            stderr.write(time.asctime() + " - " +
+                         "Processing file " + str(i_file) + " : " +
+                         os.path.basename(fi) + " - " +
+                         "N unique seq : " + str(len(uniqueSeq.keys())) + "\n")
+        record = SeqIO.parse(fi, "genbank")
+        for r in record :
+            if not args.actionFlags.get("DoCount", False) :
+                (summaryString, uniqueSeq, newSeq) = (
+                    _summarizeRecord(r, args.outfmt, args.hash, uniqueSeq))
+                stdout.write(summaryString)
+            else :
+                count = len([x for x in r.features if x.type == "CDS"])
+                stdout.write(r.annotations["gi"] + "\t" + str(count) + "\n")
+    # Write unique sequences
+    if args.actionFlags.get("DoUniqueSequences", False) :
+        with open(args.unique, "w") as fo :
+            for (k, v) in uniqueSeq.items() :
+                fo.write(">" + k + "\n")
+                fo.write(v + "\n")
+        
 ### *** _main_search(args = None, stdout = None, stderr = None)
 
 def _main_search(args = None, stdout = None, stderr = None) :

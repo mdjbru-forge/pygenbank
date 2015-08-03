@@ -10,8 +10,7 @@ setup(name = "pygenbank",
       py_modules = ["genbank"],
       entry_points = {
           "console_scripts" : [
-              "pygenbank-search=genbank:_main_search",
-              "pygenbank-extract-CDS=genbank:_main_extract_CDS"
+              "pygenbank=genbank:main"
           ]
       }
 )
