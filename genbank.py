@@ -329,14 +329,14 @@ def downloadRecords(idList, destDir, batchSize, delay = 30,
         newIdList = [x for x in idList if not ((x + ".gb") in existingFileList)]
 
     # Download the batches
-    bar = pyprind.ProgBar(len(newIdList) / batchSize, monitor=True,
-                          title='Downloading the batches')
+    # bar = pyprind.ProgBar(len(newIdList) / batchSize, monitor=True,
+    #                       title='Downloading the batches')
     for i in range(0, len(newIdList), batchSize):
         end = min(len(newIdList), i + batchSize)
         batch = newIdList[i: end]
         _downloadBatch(batch, destDir, downloadFullWGS)
         time.sleep(delay)
-        bar.update()
+        # bar.update()
 
 ### *** _downloadBatch(idBatch, destDir, downloadFullWGS = False)
 
